@@ -1,0 +1,9 @@
+share/
+_pycache_/
+lib64/
+include/
+PycharmProjects/
+pip-selfcheck.json
+pyvenv.cfg
+lib/
+.idea/
