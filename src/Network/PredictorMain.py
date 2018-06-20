@@ -1,28 +1,28 @@
-from src.Preprocessing.Preprocessor import Preprocessor
-from src.Network.NeuralNetwork import NeuralNetwork
-from Bio import SeqIO
-import numpy as np
 import time
 
+import numpy as np
+
+from src.Network.NeuralNetwork import NeuralNetwork
+from src.Preprocessing.Preprocessor import Preprocessor
 
 start_time = time.time()
 # TRAINING
 # training Set
-training_set_file = '/ebio/abt1_share/update_tprpred/data/Pfam/raw_tprs.txt'
-training_negative_set_file = '/ebio/abt1_share/update_tprpred/data/raw_nontpr.txt'
-test_set_file = '/ebio/abt1_share/update_tprpred/data/test_set_pos.txt'
-test_negative_set_file = '/ebio/abt1_share/update_tprpred/data/test_set_neg.txt'
+training_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/positive_set.txt'
+training_negative_set_file = '/ebio/abt1_share/update_tprpred/Training_Data/negative_set.txt'
+test_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/test_set_pos.txt'
+test_negative_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/test_set_neg.txt'
 
-multiple_predictions = '/ebio/abt1_share/update_tprpred/data/vikram_more.fa'
+multiple_predictions = '/ebio/abt1_share/update_tprpred/data/Test_Proteins/vikram_more.fa'
 
 #scope_predictions = '/ebio/abt1_share/toolkit_sync/databases/hh-suite/scope70/scope70.fas'
 
-human_proteins = '/ebio/abt1_share/update_tprpred/data/25.H_sapiens.fasta'
+human_proteins = '/ebio/abt1_share/update_tprpred/data/Proteomes/25.H_sapiens.fasta'
 
 multiple_proteins = '/ebio/abt1_share/update_tprpred/data/old_maybe_gold_later/testRandom.txt'
 
 # Test Protein for Prediction
-inputProtein = '/ebio/abt1_share/update_tprpred/data/1W3B.fa'
+inputProtein = '/ebio/abt1_share/update_tprpred/data/Test_Proteins/1W3B.fa'
 
 # Preprocessing Protein to predict
 PreprocessorObject = Preprocessor(inputProtein)
