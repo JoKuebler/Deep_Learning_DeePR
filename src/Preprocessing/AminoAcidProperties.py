@@ -4,6 +4,14 @@ import numpy as np
 
 
 class Properties:
+    """Class to hold properties/features for amino acids
+       Also provides method to encode amino acid at each position
+
+     :param self.positional: List, amino acid one letter representation
+     :param self.polarityValues: List, amino acid polarity values
+     :param self.hydrophobicityValues: List, amino acid hydrophobicity values
+     :param self.helixAbundance: List, amino acid values for favoring helices
+     """
 
     def __init__(self):
         self.positional = ['R', 'H', 'K', 'D', 'E', 'S', 'T', 'N', 'Q', 'C',
