@@ -1,8 +1,9 @@
 # Created by Jonas Kuebler on 05/15/2018
+import numpy as np
 from Bio import SeqIO
 from keras.preprocessing.text import one_hot
+
 from src.Preprocessing.AminoAcidProperties import Properties
-import numpy as np
 
 
 # This class provides multiple functions to preprocess data such as
@@ -111,14 +112,17 @@ class Preprocessor:
         encoded_fragments = []
         encoded_fragments_per_protein = []
 
+        # Some Peptides hold placeholders for amino acids
+        filter_out = ['X', 'x', 'B', 'b', 'Z', 'z', 'U', 'u']
+
         for fragment_list in fragments_per_protein:
 
             for fragment in fragment_list:
 
-                if 'x' not in fragment:
-                    if 'X' not in fragment:
-                        encoded = self.property_adder.encode_positions(fragment.rstrip())
-                        encoded_fragments.append(encoded)
+                # Filter out amino acid placeholders
+                if not any(x in fragment for x in filter_out):
+                    encoded = self.property_adder.encode_positions(fragment.rstrip())
+                    encoded_fragments.append(encoded)
 
             encoded_fragments_per_protein.append(encoded_fragments)
             encoded_fragments = []
@@ -130,14 +134,15 @@ class Preprocessor:
 
         encoded_fragments = []
 
+        # Some Peptides hold placeholders for amino acids
+        filter_out = ['X', 'x', 'B', 'b', 'Z', 'z', 'U', 'u']
+
         for fragment in fragments:
 
-            if 'x' not in fragment:
-                if 'X' not in fragment:
-                    if 'u' not in fragment:
-                        if 'U' not in fragment:
-                            encoded = self.property_adder.encode_positions(fragment.rstrip())
-                            encoded_fragments.append(encoded)
+            # Filter out amino acid placeholders
+            if not any(x in fragment for x in filter_out):
+                encoded = self.property_adder.encode_positions(fragment.rstrip())
+                encoded_fragments.append(encoded)
 
         return encoded_fragments
 
