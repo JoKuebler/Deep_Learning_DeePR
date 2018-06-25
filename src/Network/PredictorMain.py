@@ -1,5 +1,3 @@
-import time
-
 import numpy as np
 from Bio import SeqIO
 
@@ -8,202 +6,212 @@ from src.Network.NeuralNetwork import NeuralNetwork
 from src.Preprocessing.Preprocessor import Preprocessor
 
 
-def init_preprocessor(input):
+class MainPredictor:
 
-    # Preprocessing Protein to predict
-    preprocessor_object = Preprocessor(input)
+    def __init__(self):
+        # Positive training set
+        self.training_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/positive_set.txt'
 
-    return preprocessor_object
+        # Negative training set
+        self.training_negative_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/negativ_set.txt'
 
+        # Positive test set
+        self.test_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/test_set_pos.txt'
 
-def init_network():
+        # Negative test set
+        self.test_negative_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/test_set_neg.txt'
 
-    # Train network with Training and Test Set
-    neural_network_object = NeuralNetwork()
+        # Different Test Files
+        self.test_one = '/ebio/abt1_share/update_tprpred/data/Test_Proteins/ecoli_test.fa'
+        self.test_two = '/ebio/abt1_share/update_tprpred/data/__old_maybe_gold_later/testRandom.txt'
+        self.test_three = '/ebio/abt1_share/update_tprpred/data/Training_Data/test_single.txt'
 
-    return neural_network_object
+        # Scope70 Fasta
+        self.scope_predictions = '/ebio/abt1_share/toolkit_sync/databases/hh-suite/scope70/scope70.fas'
 
+        # EColi proteom
+        self.e_coli = '/ebio/abt1_share/update_tprpred/data/Proteomes/Escherichia_coli_K12.fas'
 
-def init_training_data(preprocessor_object):
+        self.evaluator = Result_Evaluator()
 
-    # Read in training Data
-    pos_set = preprocessor_object.read_line_files(training_set_file)
-    neg_set = preprocessor_object.read_line_files(training_negative_set_file)
-    pos_test_set = preprocessor_object.read_line_files(test_set_file)
-    neg_test_set = preprocessor_object.read_line_files(test_negative_set_file)
+    @staticmethod
+    def init_preprocessor(input):
 
-    # Multidimensional Approach encodes Data as (x, 34, 20) Array
-    encoded_pos_set = preprocessor_object.encoding_training_helper(pos_set)
-    encoded_neg_set = preprocessor_object.encoding_training_helper(neg_set)
-    encoded_pos_test_set = preprocessor_object.encoding_training_helper(pos_test_set)
-    encoded_neg_test_set = preprocessor_object.encoding_training_helper(neg_test_set)
+        # Preprocessing Protein to predict
+        preprocessor_object = Preprocessor(input)
 
-    # Add Pos and Neg Training set to one Array
-    encoded_total_set = encoded_pos_set + encoded_neg_set
-    encoded_test_total_set = encoded_pos_test_set + encoded_neg_test_set
+        return preprocessor_object
 
-    # Convert to np Array
-    encoded_array = np.asarray(encoded_total_set)
-    encoded_array_test = np.asarray(encoded_test_total_set)
+    @staticmethod
+    def init_network():
 
-    # Create Labels for Training
-    labels = preprocessor_object.create_labels(len(encoded_pos_set), len(encoded_neg_set))
+        # Train network with Training and Test Set
+        neural_network_object = NeuralNetwork()
 
-    # Create Labels for Test Set
-    labels_test = preprocessor_object.create_labels(len(encoded_pos_test_set), len(encoded_neg_test_set))
+        return neural_network_object
 
-    return [encoded_array, labels, encoded_array_test, labels_test]
+    def init_training_data(self, preprocessor_object):
 
+        # Read in training Data
+        pos_set = preprocessor_object.read_line_files(self.training_set_file)
+        neg_set = preprocessor_object.read_line_files(self.training_negative_set_file)
+        pos_test_set = preprocessor_object.read_line_files(self.test_set_file)
+        neg_test_set = preprocessor_object.read_line_files(self.test_negative_set_file)
 
-def train_network(network_object, training_data):
+        # Multidimensional Approach encodes Data as (x, 34, 20) Array
+        encoded_pos_set = preprocessor_object.encoding_training_helper(pos_set)
+        encoded_neg_set = preprocessor_object.encoding_training_helper(neg_set)
+        encoded_pos_test_set = preprocessor_object.encoding_training_helper(pos_test_set)
+        encoded_neg_test_set = preprocessor_object.encoding_training_helper(neg_test_set)
 
-    network_object.compile_network()
+        # Add Pos and Neg Training set to one Array
+        encoded_total_set = encoded_pos_set + encoded_neg_set
+        encoded_test_total_set = encoded_pos_test_set + encoded_neg_test_set
 
-    network_object.train_network(training_data[0], training_data[1], training_data[2], training_data[3])
+        # Convert to np Array
+        encoded_array = np.asarray(encoded_total_set)
+        encoded_array_test = np.asarray(encoded_test_total_set)
 
+        # Create Labels for Training
+        labels = preprocessor_object.create_labels(len(encoded_pos_set), len(encoded_neg_set))
 
-def load_network(network_object):
+        # Create Labels for Test Set
+        labels_test = preprocessor_object.create_labels(len(encoded_pos_test_set), len(encoded_neg_test_set))
 
-    network_object.load_model('/ebio/abt1_share/update_tprpred/code/PycharmProjects/TrainingData/src/NetworkData/model.json',
-                              '/ebio/abt1_share/update_tprpred/code/PycharmProjects/TrainingData/src/NetworkData/model.h5')
+        return [encoded_array, labels, encoded_array_test, labels_test]
 
-    network_object.compile_network()
+    @staticmethod
+    def train_network(network_object, training_data):
 
+        network_object.compile_network()
 
-def save_network(network_object):
+        network_object.train_network(training_data[0], training_data[1], training_data[2], training_data[3])
 
-    network_object.save_model()
+    @staticmethod
+    def load_network(network_object):
 
+        network_object.load_model('/ebio/abt1_share/update_tprpred/code/PycharmProjects/TrainingData/src/NetworkData/model.json',
+                                  '/ebio/abt1_share/update_tprpred/code/PycharmProjects/TrainingData/src/NetworkData/model.h5')
 
-def cross_validate(network_object, training_data):
+        network_object.compile_network()
 
-    network_object.cross_validate(training_data[0], training_data[1])
+    @staticmethod
+    def save_network(network_object):
 
+        network_object.save_model()
 
-def predict(network_object, preprocessor_object):
+    @staticmethod
+    def cross_validate(network_object, training_data):
 
-    # Make prediction
-    # Cut Input Protein into windows
-    fragments_per_protein = preprocessor_object.cutInWindows(34)
+        network_object.cross_validate(training_data[0], training_data[1])
 
-    prediction_set = preprocessor_object.encoding_helper(fragments_per_protein)
+    @staticmethod
+    def predict(network_object, preprocessor_object):
 
-    new_file = open('/ebio/abt1_share/update_tprpred/data/network_predictions' + '.txt', 'w')
-    counter = 0
-    foundTPR = False
+        # Make prediction
+        # Cut Input Protein into windows
+        fragments_per_protein = preprocessor_object.cutInWindows(34)
 
-    for protein in prediction_set:
+        prediction_set = preprocessor_object.encoding_helper(fragments_per_protein)
 
-        prediction_set_array = np.asarray(protein)
-        results = network_object.predict(prediction_set_array)
+        new_file = open('/ebio/abt1_share/update_tprpred/data/network_predictions' + '.txt', 'w')
+        counter = 0
+        foundTPR = False
 
-        initial_findings_index = preprocessor_object.filter_print_results(results, 0.7)
+        for protein in prediction_set:
 
-        for elem in initial_findings_index:
-            foundTPR = True
-            new_file.write('Protein: ' + str(preprocessor_object.ids[counter]) + '\n')
-            new_file.write("Probability of being a TPR starting at position " + str(elem) + ' '
-                           ':' + str(preprocessor_object.probabilites[elem]) + '\n')
-
-            new_file.write('Sequence: ' + str(fragments_per_protein[counter][elem - 1].upper()) + '\n')
-
-        counter += 1
-
-    if not foundTPR:
-        new_file.write('No TPR repeats found')
-
-    new_file.close()
-
-
-def single_predict(network_object, preprocessor_object, threshold):
-
-    # Run Time improvements
-    new_file = open('/ebio/abt1_share/update_tprpred/data/network_predictions' + '.txt', 'w')
-    counter = 0
-    found_tpr = True
-    final_props = []
-    Evaluator = Result_Evaluator()
-
-    for record in SeqIO.parse(preprocessor_object.inputFile, 'fasta'):
-
-        if len(record.seq) > 34:
-
-            fragments = preprocessor_object.cutInWindows_single(record, 34)
-
-            prediction_set = preprocessor_object.encoding_helper_single(fragments)
-
-            prediction_set_array = np.asarray(prediction_set)
-
+            prediction_set_array = np.asarray(protein)
             results = network_object.predict(prediction_set_array)
 
-            initial_findings_index = preprocessor_object.filter_print_results(results, threshold)
+            initial_findings_index = preprocessor_object.filter_print_results(results, 0.7)
 
             for elem in initial_findings_index:
+                foundTPR = True
                 new_file.write('Protein: ' + str(preprocessor_object.ids[counter]) + '\n')
                 new_file.write("Probability of being a TPR starting at position " + str(elem) + ' '
                                ':' + str(preprocessor_object.probabilites[elem]) + '\n')
 
-                final_props.append(preprocessor_object.probabilites[elem])
-
-                new_file.write('Sequence: ' + str(fragments[elem - 1].upper()) + '\n')
+                new_file.write('Sequence: ' + str(fragments_per_protein[counter][elem - 1].upper()) + '\n')
 
             counter += 1
 
-            if not found_tpr:
-                new_file.write('No TPR repeats found')
+        if not foundTPR:
+            new_file.write('No TPR repeats found')
 
-    print("Average probability: " + str(Evaluator.average_probability(final_props)))
+        new_file.close()
 
-    new_file.close()
+    def single_predict(self, network_object, preprocessor_object, threshold):
 
+        # Run Time improvements
+        new_file = open('/ebio/abt1_share/update_tprpred/data/network_predictions' + '.txt', 'w')
+        counter = 0
+        found_tpr = True
+        final_props = []
 
-if __name__ == '__main__':
+        for record in SeqIO.parse(preprocessor_object.inputFile, 'fasta'):
 
-    start_time = time.time()
+            if len(record.seq) >= 34:
 
-    # Positive training set
-    training_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/positive_set.txt'
+                fragments = preprocessor_object.cutInWindows_single(record, 34)
 
-    # Negative training set
-    training_negative_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/negativ_set.txt'
+                prediction_set = preprocessor_object.encoding_helper_single(fragments)
 
-    # Positive test set
-    test_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/test_set_pos.txt'
+                prediction_set_array = np.asarray(prediction_set)
 
-    # Negative test set
-    test_negative_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/test_set_neg.txt'
+                results = network_object.predict(prediction_set_array)
 
-    # Different Test Files
-    test_one = '/ebio/abt1_share/update_tprpred/data/Test_Proteins/vikram_more.fa'
-    test_two = '/ebio/abt1_share/update_tprpred/data/__old_maybe_gold_later/testRandom.txt'
-    test_three = '/ebio/abt1_share/update_tprpred/data/Test_Proteins/Vikram_Uniprot.fa'
+                initial_findings_index = preprocessor_object.filter_print_results(results, threshold)
 
-    # Scope70 Fasta
-    # scope_predictions = '/ebio/abt1_share/toolkit_sync/databases/hh-suite/scope70/scope70.fas'
+                for elem in initial_findings_index:
+                    new_file.write('Protein: ' + str(preprocessor_object.ids[counter]) + '\n')
+                    new_file.write("Probability of being a TPR starting at position " + str(elem) + ' '
+                                   ':' + str(preprocessor_object.probabilites[elem]) + '\n')
 
-    # EColi proteom
-    e_coli = '/ebio/abt1_share/update_tprpred/data/Proteomes/Escherichia_coli_K12.fas'
+                    final_props.append(preprocessor_object.probabilites[elem])
 
-    # Initialize necessary objects
-    Evaluator = Result_Evaluator()
-    Preprocessor = init_preprocessor(e_coli)
-    Network = init_network()
-    Training_data = init_training_data(Preprocessor)
-    #
-    train_network(Network, Training_data)
+                    new_file.write('Sequence: ' + str(fragments[elem - 1].upper()) + '\n')
 
-    # save_network(Network)
+                counter += 1
 
-    # load_network(Network)
+                if not found_tpr:
+                    new_file.write('No TPR repeats found')
 
-    single_predict(Network, Preprocessor, 0.75)
+        print("Average probability: " + str(self.evaluator.average_probability(final_props)))
 
+        new_file.close()
 
-    # print('Cutted in fragments in: ' + "%s seconds" % (str(time.time() - start_time)))
-    # start_time = time.time()
-    #
-    # print('Encoded in : ' + "%s seconds" % (str(time.time() - start_time)))
-    # start_time = time.time()
-    #
-    #
-    # print('Results written in : ' + "%s seconds" % (str(time.time() - start_time)))
+    def predict_training_data(self, network_object, preprocessor_object, threshold):
+
+        new_file = open('/ebio/abt1_share/update_tprpred/data/network_predictions' + '.txt', 'w')
+        final_props = []
+        found_tpr = True
+
+        with open(preprocessor_object.inputFile) as fileContent:
+
+            for line in fileContent:
+
+                prediction_set = preprocessor_object.encoding_helper_single(line)
+
+                prediction_set_array = np.asarray(prediction_set)
+
+                results = network_object.predict(prediction_set_array)
+
+                initial_findings_index = preprocessor_object.filter_print_results(results, threshold)
+
+                for elem in initial_findings_index:
+
+                    new_file.write("Probability of being a TPR starting at position " + str(elem) + ' '
+                                   ':' + str(preprocessor_object.probabilites[elem]) + '\n')
+
+                    final_props.append(preprocessor_object.probabilites[elem])
+
+                    new_file.write('Sequence: ' + str(line.upper()) + '\n')
+
+                if not found_tpr:
+                    new_file.write('No TPR repeats found')
+
+        print("Average probability: " + str(self.evaluator.average_probability(final_props)))
+        print("Maximal probability: " + str(max(final_props)))
+        print("Minimal probability: " + str(min(final_props)))
+
+        new_file.close()
