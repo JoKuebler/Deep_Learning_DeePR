@@ -1,13 +1,10 @@
 # Created by Jonas Kuebler on 05/18/2018
-from keras import optimizers
-from keras.models import Sequential
-from keras.layers import LSTM
-from keras.layers import Activation
-from keras.layers.core import Dense, Flatten
-from keras.models import model_from_json
-from keras.layers import Dropout
-from sklearn.model_selection import StratifiedKFold
 import numpy
+from keras import optimizers
+from keras.layers.core import Dense, Flatten
+from keras.models import Sequential
+from keras.models import model_from_json
+from sklearn.model_selection import StratifiedKFold
 
 
 # This class defines the neural network and provides training and prediction methods
@@ -15,11 +12,12 @@ import numpy
 class NeuralNetwork:
 
     def __init__(self):
-         # Define input layer
-        self.inputLayer = Dense(34, input_shape=(34, 21), activation='relu')
+
+        # Define input layer
+        self.inputLayer = Dense(34, input_shape=(34, 23), activation='relu')
 
         # Define optimizer
-        self.optimizer = optimizers.SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
+        self.optimizer = optimizers.SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
 
         # self.optimizer = optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
 
@@ -49,7 +47,7 @@ class NeuralNetwork:
         self.model.summary()
 
         # Fit network to data with parameters: Batch Size, Epochs
-        self.model.fit(training_samples, training_labels, validation_split=0.2, batch_size=1000, epochs=15, shuffle=True, verbose=2)
+        self.model.fit(training_samples, training_labels, validation_split=0.2, batch_size=250, epochs=20, shuffle=True, verbose=2)
 
         # Evaluate model
         scores = self.model.evaluate(test_samples, test_labels)
@@ -60,7 +58,7 @@ class NeuralNetwork:
 
     def predict(self, fragments):
 
-        predictions = self.model.predict(fragments, batch_size=10, verbose=2)
+        predictions = self.model.predict(fragments, batch_size=50, verbose=2)
 
         return predictions
 
@@ -89,7 +87,7 @@ class NeuralNetwork:
 
         self.model = loaded_model
 
-    def cross_validate(self, training_samples, training_labels, test_samples, test_labels):
+    def cross_validate(self, training_samples, training_labels):
 
         kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=7)
         cvscores = []
