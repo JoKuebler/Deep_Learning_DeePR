@@ -106,3 +106,14 @@
 #         decoded_fragment += amino_acids_array[amino_acid.index('1')]
 #
 #     return decoded_fragment
+
+
+## MEASURE TIME
+# print('Cutted in fragments in: ' + "%s seconds" % (str(time.time() - start_time)))
+# start_time = time.time()
+#
+# print('Encoded in : ' + "%s seconds" % (str(time.time() - start_time)))
+# start_time = time.time()
+#
+#
+# print('Results written in : ' + "%s seconds" % (str(time.time() - start_time)))
