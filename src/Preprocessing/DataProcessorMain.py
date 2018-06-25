@@ -49,15 +49,16 @@ def get_pos_training_data_homologues():
 def get_neg_training_data():
 
     # Get negative samples for training set
-    input_fasta = '/ebio/abt1_share/toolkit_sync/databases/hh-suite/scope70/scope70.fas'
-    output_directory = '/ebio/abt1_share/update_tprpred/data/'
-    identifier = 'a.118.8'
+    input_fasta = '/ebio/abt1_share/update_tprpred/data/Training_Data/SCOPE/scope70.fas'
+    output_directory = '/ebio/abt1_share/update_tprpred/data/Training_Data/'
+    output_file = 'new_negative_set'
+    identifier = 'a.'
 
     # create Biopython Fasta Parser
     fasta_parser = FastaParser(input_fasta, identifier, output_directory)
 
     # write fragments of size 34 to file
-    fasta_parser.write_to_files_fragments(34)
+    fasta_parser.write_to_files_fragments(34, output_file)
 
 
 if __name__ == '__main__':

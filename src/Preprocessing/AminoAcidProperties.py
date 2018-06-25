@@ -24,6 +24,8 @@ class Properties:
                                0.43, 0.34, 1.41, 0.90, 1.09, 1.34, 1.30, 1.16, 0.61, 1.02]
         self.betaSheetAbundance = [0.93, 0.87, 0.74, 0.54, 0.37, 0.75, 1.19, 0.89, 1.10, 1.19,
                                    0.75, 0.55, 0.83, 1.70, 1.60, 1.30, 1.05, 1.38, 1.47, 1.37]
+        self.betaTurnAbundance = [1.01, 0.95, 1.19, 1.52, 0.95, 1.43, 0.98, 1.46, 0.96, 0.96,
+                                  1.56, 1.56, 0.74, 0.59, 0.47, 0.50, 0.60, 0.66, 1.14, 0.60]
 
     # Encode amino acid sequence to multidimensional array with dimension (x, 34,23)
     def encode_positions(self, fragment):
@@ -34,10 +36,10 @@ class Properties:
 
         # vector with properties
         empty_vector = [False, False, False, False, False, False, False, False, False, False,
-                        False, False, False, False, False, False, False, False, False, False, 0.0, 0.0]
+                       False, False, False, False, False, False, False, False, False, False, 0.0, 0.0, 0.0]
 
         # only properties
-        # empty_vector = [0.0]
+        # empty_vector = [0.0, 0.0, 0.0, 0.0]
 
         # need copy
         current_vector = empty_vector.copy()
@@ -51,14 +53,16 @@ class Properties:
             current_vector[self.positional.index(aminoAcid.upper())] = True
 
             # add polarity, hydrophobicity and helix abundance
-            # current_vector[len(empty_vector)-3] = self.polarityValues[self.positional.index(aminoAcid.upper())]
+            # current_vector[len(empty_vector)-1] = self.polarityValues[self.positional.index(aminoAcid.upper())]
             # current_vector[len(empty_vector)-2] = self.hydrophobicityValues[self.positional.index(aminoAcid.upper())]
             current_vector[len(empty_vector)-1] = self.helixAbundance[self.positional.index(aminoAcid.upper())]
             current_vector[len(empty_vector)-2] = self.betaSheetAbundance[self.positional.index(aminoAcid.upper())]
+            current_vector[len(empty_vector)-3] = self.betaTurnAbundance[self.positional.index(aminoAcid.upper())]
 
-            #current_vector[0] = self.polarityValues[self.positional.index(aminoAcid.upper())]
-            #current_vector[1] = self.hydrophobicityValues[self.positional.index(aminoAcid.upper())]
-            #current_vector[0] = self.helixAbundance[self.positional.index(aminoAcid.upper())]
+            # current_vector[0] = self.polarityValues[self.positional.index(aminoAcid.upper())]
+            # current_vector[1] = self.hydrophobicityValues[self.positional.index(aminoAcid.upper())]
+            # current_vector[2] = self.helixAbundance[self.positional.index(aminoAcid.upper())]
+            # current_vector[3] = self.betaSheetAbundance[self.positional.index(aminoAcid.upper())]
 
             # append to vector for whole fragment
             fragment_vector.append(np.array(current_vector))
