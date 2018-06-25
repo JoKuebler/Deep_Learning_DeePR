@@ -139,14 +139,23 @@ class Preprocessor:
         # Some Peptides hold placeholders for amino acids
         filter_out = ['X', 'x', 'B', 'b', 'Z', 'z', 'U', 'u']
 
-        for fragment in fragments:
+        if type(fragments) is list:
+            for fragment in fragments:
 
+                # Filter out amino acid placeholders
+                if not any(x in fragment for x in filter_out):
+                    encoded = self.property_adder.encode_positions(fragment.rstrip())
+                    encoded_fragments.append(encoded)
+
+            return encoded_fragments
+
+        else:
             # Filter out amino acid placeholders
-            if not any(x in fragment for x in filter_out):
-                encoded = self.property_adder.encode_positions(fragment.rstrip())
+            if not any(x in fragments for x in filter_out):
+                encoded = self.property_adder.encode_positions(fragments.rstrip())
                 encoded_fragments.append(encoded)
 
-        return encoded_fragments
+                return encoded_fragments
 
     def encoding_training_helper(self, file_content_list):
 
