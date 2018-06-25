@@ -62,6 +62,8 @@ class Preprocessor:
 
         sequence = record.seq
 
+        self.ids.append(record.id)
+
         # declare start of window
         window_start = int()
         protein_length = len(record.seq)
