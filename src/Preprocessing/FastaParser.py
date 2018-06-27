@@ -8,29 +8,28 @@ from Bio import SeqIO
 # Cut out fragments of certain length and write raw output to file
 class FastaParser:
 
-    def __init__(self, input_file, identifier, output_directory):
+    def __init__(self, input_file, output_directory, output_file, identifier=''):
         self.input_file = input_file
         self.identifier = identifier
         self.output_directory = output_directory
+        self.output_file = output_file
 
-    # writes each record to seperate file
-    def write_to_files_by_identifier(self):
+    # Get fasta sequences with certain identifier by excluding the other sequences
+    def filter_by_identifier(self):
         records = list(SeqIO.parse(self.input_file ,'fasta'))
+        new_file = open(self.output_directory + self.output_file, 'w')
 
         for record in records:
-
             if self.identifier in record.description:
-                SeqIO.write(record, self.output_directory + record.id + '.fa', 'fasta')
+                new_file.write(record)
 
-    def write_to_files_all(self):
+        new_file.close()
 
-        records = list(SeqIO.parse(self.input_file, 'fasta'))
+        return new_file
 
-        for record in records:
-            SeqIO.write(record, self.output_directory + record.id + '.fa', 'fasta')
-
-    # cut out 34 fragments of non tpr like
-    def write_to_files_fragments(self, length, output_file):
+    # Takes input file and creates file containing fragments of a certain length
+    # Excluding certain identifier
+    def filter_backwards_cut(self, length, output_file):
 
         records = list(SeqIO.parse(self.input_file,'fasta'))
         new_file = open(self.output_directory + output_file + '.txt', 'w')

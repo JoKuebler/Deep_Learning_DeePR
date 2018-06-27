@@ -7,40 +7,28 @@ from src.Preprocessing.FastaParser import FastaParser
 from src.Tools.TPRPred import TPRPredRunner
 
 
-def get_pos_training_data_scope():
+# Take homologue fasta file
+def get_pos_training_data():
 
-    # Extract all TPRs from scope
-    output_directory_tpr_fasta = '/ebio/abt1_share/update_tprpred/data/tpr_fasta_files_new/'
+    # Scope70 fasta file
+    input_scope = '/ebio/abt1_share/toolkit_sync/databases/hh-suite/scope70/scope70.fas'
 
-    fasta_parser = FastaParser('/ebio/abt1_share/toolkit_sync/databases/hh-suite/scope70/scope70.fas',
-                               'a.118.8', output_directory_tpr_fasta)
+    # Fasta File to be input for TPRpred
+    input_file = 'FASTA TO PREDICT'
 
-    fasta_parser.write_to_files_by_identifier()
+    # Create Fasta Parser with input File, output directory and file and optional identifier to filter sequences out
+    fasta_parser = FastaParser(input_file,
+                               'OUTPUT_DIRECTORY', 'positive_data_sequences.fa', 'a.118.8')
 
+    # Filter sequences out by identifier
+    filtered_input = fasta_parser.filter_by_identifier()
 
-def get_pos_training_data_homologues():
-
-    # Get homologue sequences by Blast Search against nr90 and then searching Hits for TPRs with TPRpred
-    output_directory_tpr_fasta = '/ebio/abt1_share/update_tprpred/data/tpr_fasta_files/'
-
-    # After manually getting homologues with PSI Blast write each sequence to one file in order to make TPR prediction
-    for file in os.listdir('/ebio/abt1_share/update_tprpred/data/homologues/'):
-
-        # create Biopython Fasta Parser
-        fasta_parser = FastaParser('/ebio/abt1_share/update_tprpred/data/homologues/' + file,
-                                   '', output_directory_tpr_fasta)
-
-        # split homologue sequences to one file per sequence
-        fasta_parser.write_to_files_all()
-
-    # Take homologue sequences and predict TPRs with TPRpred
-    # Directory where tpr Fastas are stored
-    input_directory = '/ebio/abt1_share/update_tprpred/data/tpr_fasta_files/'
     # Directorry to safe TPR predictions
     output_directory = '/ebio/abt1_share/update_tprpred/data/tprpred_predictions/'
+    output_file = 'predictions.txt'
 
     # initialize TPRPredRunner object with input directory and output directory
-    tprpred_runner = TPRPredRunner(input_directory, output_directory)
+    tprpred_runner = TPRPredRunner(filtered_input, output_directory, output_file)
 
     # runs TPR pred for each file in input directory and stores predictions in output directory
     tprpred_runner.predict_tpr()
@@ -58,12 +46,13 @@ def get_neg_training_data():
     fasta_parser = FastaParser(input_fasta, identifier, output_directory)
 
     # write fragments of size 34 to file
-    fasta_parser.write_to_files_fragments(34, output_file)
+    fasta_parser.filter_backwards_cut(34, output_file)
 
 
 if __name__ == '__main__':
 
-    # get_pos_training_data_scope()
+    print('Nothing activated')
+    # get_pos_training_data()
 
-    get_neg_training_data()
+    # get_neg_training_data()
 
