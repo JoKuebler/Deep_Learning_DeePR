@@ -26,6 +26,8 @@ class Properties:
                                                         0.75, 0.55, 0.83, 1.70, 1.60, 1.30, 1.05, 1.38, 1.47, 1.37])
         self.betaTurnAbundance = self.normalize_values([1.01, 0.95, 1.19, 1.52, 0.95, 1.43, 0.98, 1.46, 0.96, 0.96,
                                                         1.56, 1.56, 0.74, 0.59, 0.47, 0.50, 0.60, 0.66, 1.14, 0.60])
+        self.sidechainVolume = self.normalize_values([105.0, 79.0, 100.0, 40.0, 62.0, 29.3, 51.3, 58.7, 80.7, 44.6,
+                                                      0.0, 41.9, 27.5, 71.5, 93.5, 93.5, 94.1, 115.5, 117.3, 145.5])
 
     # Encode amino acid sequence to multidimensional array with dimension (x, 34,23)
     def encode_positions(self, fragment):
@@ -36,7 +38,8 @@ class Properties:
 
         # vector with properties
         empty_vector = [False, False, False, False, False, False, False, False, False, False,
-                       False, False, False, False, False, False, False, False, False, False, 0.0, 0.0, 0.0, 0.0, 0.0]
+                        False, False, False, False, False, False, False, False, False, False,
+                        0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
         # only properties
         # empty_vector = [0.0, 0.0, 0.0, 0.0]
@@ -58,6 +61,7 @@ class Properties:
             current_vector[len(empty_vector)-3] = self.helixAbundance[self.positional.index(aminoAcid.upper())]
             current_vector[len(empty_vector)-4] = self.betaSheetAbundance[self.positional.index(aminoAcid.upper())]
             current_vector[len(empty_vector)-5] = self.betaTurnAbundance[self.positional.index(aminoAcid.upper())]
+            current_vector[len(empty_vector)-6] = self.sidechainVolume[self.positional.index(aminoAcid.upper())]
 
             # current_vector[0] = self.polarityValues[self.positional.index(aminoAcid.upper())]
             # current_vector[1] = self.hydrophobicityValues[self.positional.index(aminoAcid.upper())]
