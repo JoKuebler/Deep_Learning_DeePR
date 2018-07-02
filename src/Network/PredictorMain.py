@@ -13,7 +13,7 @@ class MainPredictor:
         self.training_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/positive_set.txt'
 
         # Negative training set
-        self.training_negative_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/negativ_set.txt'
+        self.training_negative_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/new_negative_set.txt'
 
         # Positive test set
         self.test_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/test_set_pos.txt'
@@ -23,7 +23,7 @@ class MainPredictor:
 
         # Different Test Files
         self.test_one = '/ebio/abt1_share/update_tprpred/data/Test_Proteins/ecoli_test.fa'
-        self.test_two = '/ebio/abt1_share/update_tprpred/data/__old_maybe_gold_later/testRandom.txt'
+        self.test_two = '/ebio/abt1_share/update_tprpred/data/Proteomes/HumanExampleSeqs.txt'
         self.test_three = '/ebio/abt1_share/update_tprpred/data/Training_Data/test_single.txt'
 
         # Scope70 Fasta
@@ -53,9 +53,16 @@ class MainPredictor:
     def init_training_data(self, preprocessor_object):
 
         # Read in training Data
+        print('Positive Training Data:', self.training_set_file)
         pos_set = preprocessor_object.read_line_files(self.training_set_file)
+
+        print('Negative Training Data:', self.training_negative_set_file)
         neg_set = preprocessor_object.read_line_files(self.training_negative_set_file)
+
+        print('Positive Test Data:', self.test_set_file)
         pos_test_set = preprocessor_object.read_line_files(self.test_set_file)
+
+        print('Negative Test Data:', self.test_negative_set_file)
         neg_test_set = preprocessor_object.read_line_files(self.test_negative_set_file)
 
         # Multidimensional Approach encodes Data as (x, 34, 20) Array
@@ -141,6 +148,8 @@ class MainPredictor:
         new_file.close()
 
     def single_predict(self, network_object, preprocessor_object, threshold):
+
+        print('File to predict', preprocessor_object.inputFile)
 
         # Run Time improvements
         new_file = open('/ebio/abt1_share/update_tprpred/data/network_predictions' + '.txt', 'w')
