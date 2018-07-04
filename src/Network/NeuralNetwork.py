@@ -1,7 +1,7 @@
 # Created by Jonas Kuebler on 05/18/2018
 import numpy
 from keras import optimizers
-from keras.layers.core import Dense, Flatten
+from keras.layers.core import Dense, Flatten, Dropout
 from keras.models import Sequential
 from keras.models import model_from_json
 from sklearn.model_selection import StratifiedKFold
@@ -14,7 +14,7 @@ class NeuralNetwork:
     def __init__(self):
 
         # Define input layer
-        self.inputLayer = Dense(34, input_shape=(34, 23), activation='relu')
+        self.inputLayer = Dense(34, input_shape=(34, 26), activation='relu')
 
         # Define optimizer
         self.optimizer = optimizers.SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
@@ -24,6 +24,7 @@ class NeuralNetwork:
         # Define model including layers and activation functions
         self.model = Sequential([
             self.inputLayer,
+            Dropout(0.2),
             Dense(34, activation='relu'),
             Flatten(),
             Dense(1, activation='sigmoid')
@@ -47,7 +48,7 @@ class NeuralNetwork:
         self.model.summary()
 
         # Fit network to data with parameters: Batch Size, Epochs
-        self.model.fit(training_samples, training_labels, validation_split=0.2, batch_size=250, epochs=20, shuffle=True, verbose=2)
+        self.model.fit(training_samples, training_labels, validation_split=0.2, batch_size=250, epochs=15, shuffle=True, verbose=2)
 
         # Evaluate model
         scores = self.model.evaluate(test_samples, test_labels)
@@ -57,6 +58,8 @@ class NeuralNetwork:
         print('[ERROR,ACCURACY]', scores)
 
     def predict(self, fragments):
+
+        print(str(len(fragments)) + ' Sequences predicted')
 
         predictions = self.model.predict(fragments, batch_size=50, verbose=2)
 
