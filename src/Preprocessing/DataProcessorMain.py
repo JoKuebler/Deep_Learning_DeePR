@@ -38,12 +38,13 @@ def get_neg_training_data():
 
     # Get negative samples for training set
     input_fasta = '/ebio/abt1_share/update_tprpred/data/Training_Data/SCOPE/scope70.fas'
-    output_directory = '/ebio/abt1_share/update_tprpred/data/Training_Data/'
+    output_directory = '/ebio/abt1_share/update_tprpred/Data/Training_Data/'
     output_file = 'new_negative_set'
-    identifier = 'a.'
+    identifier = ['a.7.14', 'a.7.16', 'a.23.4', 'a.24.24', 'a.118.5', 'a.118.7', 'a.118.8',
+                  'a.118.20', 'a.246.2', 'd.157.1', 'e.61.1']
 
     # create Biopython Fasta Parser
-    fasta_parser = FastaParser(input_fasta, identifier, output_directory)
+    fasta_parser = FastaParser(input_fasta, output_directory, output_file, identifier)
 
     # write fragments of size 34 to file
     fasta_parser.filter_backwards_cut(34, output_file)
@@ -51,8 +52,8 @@ def get_neg_training_data():
 
 if __name__ == '__main__':
 
-    print('Nothing activated')
+    # print('Nothing activated')
     # get_pos_training_data()
 
-    # get_neg_training_data()
+    get_neg_training_data()
 
