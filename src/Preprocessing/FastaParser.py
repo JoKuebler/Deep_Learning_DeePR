@@ -27,18 +27,32 @@ class FastaParser:
 
         return new_file
 
+    # Get fasta sequences with certain identifier by excluding the other sequences
+    def filter_by_identifier_backwards(self):
+        records = list(SeqIO.parse(self.input_file ,'fasta'))
+        new_file = open(self.output_directory + self.output_file, 'w')
+
+        for record in records:
+            if not any(x in record.description for x in self.identifier):
+                new_file.write(record.description + '\n')
+
+        new_file.close()
+
+        return new_file
+
     # Takes input file and creates file containing fragments of a certain length
     # Excluding certain identifier
     def filter_backwards_cut(self, length, output_file):
 
         records = list(SeqIO.parse(self.input_file,'fasta'))
+
         new_file = open(self.output_directory + output_file + '.txt', 'w')
 
         # Some Peptides hold placeholders for amino acids
         filter_out = ['X', 'x', 'B', 'b', 'Z', 'z', 'U', 'u']
 
         for record in records:
-            if self.identifier not in record.description:
+            if not any(x in record.description for x in self.identifier):
                 start = 0
                 end = length
                 while end < len(record.seq):
