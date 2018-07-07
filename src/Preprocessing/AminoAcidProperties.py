@@ -37,18 +37,18 @@ class Properties:
         #                 False, False, False, False, False, False, False, False, False, False]
 
         # vector with properties
-        # empty_vector = [False, False, False, False, False, False, False, False, False, False,
-        #                 False, False, False, False, False, False, False, False, False, False,
-        #                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        empty_vector = [False, False, False, False, False, False, False, False, False, False,
+                        False, False, False, False, False, False, False, False, False, False,
+                        0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
         # vector with properties
-        empty_vector_combined = [[False, False, False, False, False, False, False, False, False, False,
-                                 False, False, False, False, False, False, False, False, False, False],
-                                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        # empty_vector_combined = [[False, False, False, False, False, False, False, False, False, False,
+        #                          False, False, False, False, False, False, False, False, False, False],
+        #                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
         # need copy
-        # current_vector = empty_vector.copy()
-        current_vector_combined = empty_vector_combined.copy()
+        current_vector = empty_vector.copy()
+        # current_vector_combined = empty_vector_combined.copy()
 
         # array to store vector for each amino acid
         fragment_vector = []
@@ -56,31 +56,31 @@ class Properties:
         # encode each amino acid
         for aminoAcid in fragment:
             # find index in amino acid array and set char at index to 1
-            # current_vector[self.positional.index(aminoAcid.upper())] = True
-            current_vector_combined[0][self.positional.index(aminoAcid.upper())] = True
+            current_vector[self.positional.index(aminoAcid.upper())] = True
+            # current_vector_combined[0][self.positional.index(aminoAcid.upper())] = True
 
             # add polarity, hydrophobicity and helix abundance
-            # current_vector[len(empty_vector) - 1] = self.polarityValues[self.positional.index(aminoAcid.upper())]
-            # current_vector[len(empty_vector) - 2] = self.hydrophobicityValues[self.positional.index(aminoAcid.upper())]
-            # current_vector[len(empty_vector) - 3] = self.helixAbundance[self.positional.index(aminoAcid.upper())]
-            # current_vector[len(empty_vector) - 4] = self.betaSheetAbundance[self.positional.index(aminoAcid.upper())]
-            # current_vector[len(empty_vector) - 5] = self.betaTurnAbundance[self.positional.index(aminoAcid.upper())]
-            # current_vector[len(empty_vector) - 6] = self.sidechainVolume[self.positional.index(aminoAcid.upper())]
+            current_vector[len(empty_vector) - 1] = self.polarityValues[self.positional.index(aminoAcid.upper())]
+            current_vector[len(empty_vector) - 2] = self.hydrophobicityValues[self.positional.index(aminoAcid.upper())]
+            current_vector[len(empty_vector) - 3] = self.helixAbundance[self.positional.index(aminoAcid.upper())]
+            current_vector[len(empty_vector) - 4] = self.betaSheetAbundance[self.positional.index(aminoAcid.upper())]
+            current_vector[len(empty_vector) - 5] = self.betaTurnAbundance[self.positional.index(aminoAcid.upper())]
+            current_vector[len(empty_vector) - 6] = self.sidechainVolume[self.positional.index(aminoAcid.upper())]
 
-            current_vector_combined[len(empty_vector_combined) - 1] = self.polarityValues[self.positional.index(aminoAcid.upper())]
-            current_vector_combined[len(empty_vector_combined) - 2] = self.hydrophobicityValues[self.positional.index(aminoAcid.upper())]
-            current_vector_combined[len(empty_vector_combined) - 3] = self.helixAbundance[self.positional.index(aminoAcid.upper())]
-            current_vector_combined[len(empty_vector_combined) - 4] = self.betaSheetAbundance[self.positional.index(aminoAcid.upper())]
-            current_vector_combined[len(empty_vector_combined) - 5] = self.betaTurnAbundance[self.positional.index(aminoAcid.upper())]
-            current_vector_combined[len(empty_vector_combined) - 6] = self.sidechainVolume[self.positional.index(aminoAcid.upper())]
+            # current_vector_combined[len(empty_vector_combined) - 1] = self.polarityValues[self.positional.index(aminoAcid.upper())]
+            # current_vector_combined[len(empty_vector_combined) - 2] = self.hydrophobicityValues[self.positional.index(aminoAcid.upper())]
+            # current_vector_combined[len(empty_vector_combined) - 3] = self.helixAbundance[self.positional.index(aminoAcid.upper())]
+            # current_vector_combined[len(empty_vector_combined) - 4] = self.betaSheetAbundance[self.positional.index(aminoAcid.upper())]
+            # current_vector_combined[len(empty_vector_combined) - 5] = self.betaTurnAbundance[self.positional.index(aminoAcid.upper())]
+            # current_vector_combined[len(empty_vector_combined) - 6] = self.sidechainVolume[self.positional.index(aminoAcid.upper())]
 
             # append to vector for whole fragment
-            # fragment_vector.append(np.array(current_vector))
-            fragment_vector.append(np.array(current_vector_combined))
+            fragment_vector.append(np.array(current_vector))
+            # fragment_vector.append(np.array(current_vector_combined))
 
             # reset current vector for next amino acid
-            # current_vector = empty_vector.copy()
-            current_vector_combined = empty_vector_combined
+            current_vector = empty_vector.copy()
+            #current_vector_combined = empty_vector_combined
 
         return fragment_vector
 

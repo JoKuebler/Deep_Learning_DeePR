@@ -1,7 +1,7 @@
 # filters out high p values for tprpred predictions
 def filter_high_pvalues(input_file, output_directory):
 
-    values = ['e+00', 'e-01', 'e-02', 'e-03']
+    values = ['e+00']
 
     open_file = open(input_file, 'r')
     new_file = open(output_directory + 'pvalue_filtered' + '.txt', 'w')
@@ -27,6 +27,6 @@ def filter_high_pvalues(input_file, output_directory):
 
 if __name__ == '__main__':
 
-    filter_high_pvalues('/ebio/abt1_share/update_tprpred/data/Pfam/tprpred_predictions.txt',
-                        '/ebio/abt1_share/update_tprpred/data/Pfam/'
+    filter_high_pvalues('/ebio/abt1_share/update_tprpred/data/Training_Data/Pfam/tprpred_preds_TPR_1.txt',
+                        '/ebio/abt1_share/update_tprpred/data/Training_Data/Pfam/'
                         )

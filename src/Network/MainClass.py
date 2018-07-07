@@ -1,6 +1,5 @@
-from src.Helpers.Result_Evaluator import Result_Evaluator
-from src.Network.FeatureSelection import FeatureSelection
 from src.Network.PredictorMain import MainPredictor
+from src.Preprocessing.PDBParser import PDB_Parser
 
 if __name__ == '__main__':
 
@@ -9,26 +8,31 @@ if __name__ == '__main__':
     main_runner = MainPredictor()
     # Initialize necessary objects
     # Preprocessor with input data to predict
-    Preprocessor = main_runner.init_preprocessor(main_runner.test_two)
+    #Preprocessor = main_runner.init_preprocessor(main_runner.test_four)
     # Network
-    Network = main_runner.init_network()
+    #Network = main_runner.init_network()
     # Feature Selector
-    FeatureSelector = FeatureSelection()
+    #FeatureSelector = FeatureSelection()
     # Result Evaluator
-    Result_Evaluator = Result_Evaluator()
+    #Result_Evaluator = Result_Evaluator()
+    PDBParser = PDB_Parser()
     # -----------------------------------------------
+
+    # -------------- Preprocessing ------------------
+    PDBParser.single_chains('/ebio/abt1_share/update_tprpred/data/TestPDB')
+
 
     # --------------- Training ----------------------
     # Initialize objects when training model
-    Training_data = main_runner.init_training_data(Preprocessor)
+    #Training_data = main_runner.init_training_data(Preprocessor)
     # Traing network on data and apply cross validation
-    main_runner.train_network(Network, Training_data)
+    #main_runner.train_network(Network, Training_data)
     # main_runner.cross_validate(Network, Training_data)
     # -----------------------------------------------
 
     # --------------- Safe & Load -------------------
     # If model has to be saved after training
-    # main_runner.save_network(Network)
+    #main_runner.save_network(Network)
 
     # Load network from saved json
     # main_runner.load_network(Network)
@@ -39,7 +43,7 @@ if __name__ == '__main__':
     # main_runner.predict_training_data(Network, Preprocessor_two, 0.8)
 
     # predict desired data with threshold (sequences)
-    # main_runner.single_predict(Network, Preprocessor, 0.93)
+    #main_runner.single_predict(Network, Preprocessor, 0.5)
     # -----------------------------------------------
 
     # --------------Evaluation ----------------------

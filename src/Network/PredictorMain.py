@@ -10,7 +10,7 @@ class MainPredictor:
 
     def __init__(self):
         # Positive training set
-        self.training_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/positive_set.txt'
+        self.training_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/positive_set_TPR1.txt'
 
         # Negative training set
         self.training_negative_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/new_negative_set.txt'
@@ -25,6 +25,7 @@ class MainPredictor:
         self.test_one = '/ebio/abt1_share/update_tprpred/data/Test_Proteins/ecoli_test.fa'
         self.test_two = '/ebio/abt1_share/update_tprpred/data/Proteomes/HumanExampleSeqs.txt'
         self.test_three = '/ebio/abt1_share/update_tprpred/data/Training_Data/test_single.txt'
+        self.test_four = '/ebio/abt1_share/update_tprpred/data/Test_Proteins/RPAP3.fa'
 
         # Scope70 Fasta
         self.scope_predictions = '/ebio/abt1_share/toolkit_sync/databases/hh-suite/scope70/scope70.fas'
