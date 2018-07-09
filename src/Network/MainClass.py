@@ -19,7 +19,8 @@ if __name__ == '__main__':
     # -----------------------------------------------
 
     # -------------- Preprocessing ------------------
-    PDBParser.single_chains('/ebio/abt1_share/update_tprpred/data/TestPDB')
+    #PDBParser.single_chains('/ebio/abt1_share/update_tprpred/data/TestPDB')
+    PDBParser.download_build('/ebio/abt1_share/update_tprpred/data/PDB_Approach/PDS/')
 
 
     # --------------- Training ----------------------

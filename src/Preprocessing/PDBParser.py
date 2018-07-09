@@ -1,7 +1,13 @@
 # Created by Jonas Kuebler on 05/01/2018
-import os
 
+import subprocess
+import warnings
+
+from Bio import BiopythonWarning
+from Bio.PDB import PDBList
 from Bio.PDB import PDBParser, PDBIO
+
+warnings.simplefilter('ignore', BiopythonWarning)
 
 
 # This class takes an pdb File as input and returns
@@ -37,14 +43,70 @@ class PDB_Parser:
     #     return self.createdFile.name
 
     # Takes folder of pdb files and writes each chain into seperate file
-    def single_chains(self, directory):
+    @staticmethod
+    def single_chains(file, directory, entry):
 
-        for file in os.listdir(directory):
-            io = PDBIO()
-            pdb = PDBParser().get_structure(str(file[0:4]), directory + '/' + file)
+        io = PDBIO()
+        pdb = PDBParser().get_structure(str(entry), file)
 
+        chain_files = []
+
+        # Check how many chains there are
+        for element in pdb.get_chains():
+            chain_files.append(str(pdb.get_id()) + '_' + str(element.get_id()))
+
+        # Filter duplicates
+        chain_files = list(set(chain_files))
+
+        # Write them to seperate files
+        if len(chain_files) > 1:
             for chain in pdb.get_chains():
                 io.set_structure(chain)
-                io.save(pdb.get_id() + '_' + chain.get_id() + '.pdb')
+                io.save(directory + '/' + pdb.get_id() + '_' + chain.get_id() + '.pdb')
 
+        return chain_files
 
+    # Run the createPDS from master
+    @staticmethod
+    def build_master_database(directory, pdb_file):
+
+        subprocess.run(['/ebio/abt1_share/update_tprpred/tools/createPDS', '--type', 'target', '--pdb',
+                        directory + pdb_file + '.pdb', '--pds',
+                        directory + pdb_file + '.pds'])
+        print('Converted')
+
+        subprocess.run(['rm', directory + pdb_file + '.pdb'])
+
+    # Downloads all PDB Files and creates Database for master search
+    def download_build(self, directory):
+
+        # Init PDBList from Biopython
+        pdbl = PDBList()
+        all_pdb = pdbl.get_all_entries()
+        testIDs = ['3hhb', '2hr2', '2hhb', '1zb1', '5MQX']
+
+        # Get all entries
+        for entry in testIDs:
+
+            # Download via Biopython API
+            pdbl.retrieve_pdb_file(entry, file_format='pdb', obsolete=False,
+                                   pdir=directory)
+
+            # Rename .ent files to .pdb files
+            subprocess.run(['mv', directory + 'pdb' + str(entry.lower()) + '.ent',
+                            directory + str(entry).lower() + '.pdb'])
+
+            # Check if pdb file has multiple chains, if yes write to multiple files
+            chains = list(set(self.single_chains(directory + str(entry.lower()) + '.pdb', directory, entry)))
+
+            # If there are multiple chain files create pds file for all
+            if len(chains) > 1:
+
+                subprocess.run(['rm', directory + str(entry) + '.pdb'])
+
+                for chain in chains:
+                    self.build_master_database(directory, chain)
+
+            # pds file for single
+            else:
+                self.build_master_database(directory, str(entry).lower())
