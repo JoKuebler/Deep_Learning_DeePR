@@ -9,7 +9,6 @@ from Bio.PDB import PDBParser, PDBIO
 
 warnings.simplefilter('ignore', BiopythonWarning)
 
-
 # This class takes an pdb File as input and returns
 # a PDB file containing only the CAlpha atoms of the input file
 class PDB_Parser:
@@ -70,10 +69,9 @@ class PDB_Parser:
     @staticmethod
     def build_master_database(directory, pdb_file):
 
-        subprocess.run(['/ebio/abt1_share/update_tprpred/tools/createPDS', '--type', 'target', '--pdb',
+        subprocess.run(['/tmp/jonas/createPDS', '--type', 'target', '--pdb',
                         directory + pdb_file + '.pdb', '--pds',
                         directory + pdb_file + '.pds'])
-        print('Converted')
 
         subprocess.run(['rm', directory + pdb_file + '.pdb'])
 
@@ -83,30 +81,46 @@ class PDB_Parser:
         # Init PDBList from Biopython
         pdbl = PDBList()
         all_pdb = pdbl.get_all_entries()
-        testIDs = ['3hhb', '2hr2', '2hhb', '1zb1', '5MQX']
+
+        with open('/tmp/jonas/pdb_exclude.txt') as file_content:
+            leave_out = file_content.readlines()
+
+        leave_out_strip = [x.strip() for x in leave_out]
+
+        # testIDs = ['3hhb', '2hr2', '2hhb', '1zb1', '5MQX', '1y8m', '2pqn', '2pqr', '1nzn', '1pc2', '1elr']
 
         # Get all entries
-        for entry in testIDs:
+        for entry in all_pdb:
 
-            # Download via Biopython API
-            pdbl.retrieve_pdb_file(entry, file_format='pdb', obsolete=False,
-                                   pdir=directory)
+            if entry not in leave_out_strip:
 
-            # Rename .ent files to .pdb files
-            subprocess.run(['mv', directory + 'pdb' + str(entry.lower()) + '.ent',
-                            directory + str(entry).lower() + '.pdb'])
+                # Download via Biopython API
+                pdbl.retrieve_pdb_file(entry, obsolete=False,
+                                       pdir=directory, file_format='pdb')
 
-            # Check if pdb file has multiple chains, if yes write to multiple files
-            chains = list(set(self.single_chains(directory + str(entry.lower()) + '.pdb', directory, entry)))
+                # Rename .ent files to .pdb files
+                subprocess.run(['mv', directory + 'pdb' + str(entry.lower()) + '.ent',
+                                directory + str(entry).lower() + '.pdb'])
 
-            # If there are multiple chain files create pds file for all
-            if len(chains) > 1:
+                # Check if pdb file has multiple chains, if yes write to multiple files
+                chains = list(set(self.single_chains(directory + str(entry.lower()) + '.pdb', directory, entry)))
 
-                subprocess.run(['rm', directory + str(entry) + '.pdb'])
+                # If there are multiple chain files create pds file for all
+                if len(chains) > 1:
 
-                for chain in chains:
-                    self.build_master_database(directory, chain)
+                    subprocess.run(['rm', directory + str(entry).lower() + '.pdb'])
 
-            # pds file for single
-            else:
-                self.build_master_database(directory, str(entry).lower())
+                    for chain in chains:
+                        self.build_master_database(directory, chain)
+
+                # pds file for single
+                else:
+                    self.build_master_database(directory, str(entry).lower())
+
+
+# Main Method
+if __name__ == '__main__':
+
+    parser_obejct = PDB_Parser()
+
+    parser_obejct.download_build('/tmp/jonas/PDS/')
