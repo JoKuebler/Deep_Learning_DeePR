@@ -2,6 +2,7 @@
 
 import subprocess
 import warnings
+from pathlib import Path
 
 from Bio import BiopythonWarning
 from Bio.PDB import PDBList
@@ -81,16 +82,17 @@ class PDB_Parser:
         # Init PDBList from Biopython
         pdbl = PDBList()
         all_pdb = pdbl.get_all_entries()
+        not_found = []
 
         with open('/tmp/jonas/pdb_exclude.txt') as file_content:
             leave_out = file_content.readlines()
 
         leave_out_strip = [x.strip() for x in leave_out]
 
-        # testIDs = ['3hhb', '2hr2', '2hhb', '1zb1', '5MQX', '1y8m', '2pqn', '2pqr', '1nzn', '1pc2', '1elr']
+        # testIDs = ['3hhb', '2hr2', '2hhb', '1zb1', '5MQX','111f', '1y8m', '2pqn', '2pqr', '1nzn', '1pc2']
 
         # Get all entries
-        for entry in all_pdb:
+        for entry in all_pdb[11194:]:
 
             if entry not in leave_out_strip:
 
@@ -98,24 +100,32 @@ class PDB_Parser:
                 pdbl.retrieve_pdb_file(entry, obsolete=False,
                                        pdir=directory, file_format='pdb')
 
-                # Rename .ent files to .pdb files
-                subprocess.run(['mv', directory + 'pdb' + str(entry.lower()) + '.ent',
-                                directory + str(entry).lower() + '.pdb'])
+                file = Path(directory + 'pdb' + str(entry).lower() + '.ent')
 
-                # Check if pdb file has multiple chains, if yes write to multiple files
-                chains = list(set(self.single_chains(directory + str(entry.lower()) + '.pdb', directory, entry)))
+                if file.is_file():
 
-                # If there are multiple chain files create pds file for all
-                if len(chains) > 1:
+                    # Rename .ent files to .pdb files
+                    subprocess.run(['mv', directory + 'pdb' + str(entry.lower()) + '.ent',
+                                    directory + str(entry).lower() + '.pdb'])
 
-                    subprocess.run(['rm', directory + str(entry).lower() + '.pdb'])
+                    # Check if pdb file has multiple chains, if yes write to multiple files
+                    chains = list(set(self.single_chains(directory + str(entry.lower()) + '.pdb', directory, entry)))
 
-                    for chain in chains:
-                        self.build_master_database(directory, chain)
+                    # If there are multiple chain files create pds file for all
+                    if len(chains) > 1:
 
-                # pds file for single
+                        subprocess.run(['rm', directory + str(entry).lower() + '.pdb'])
+
+                        for chain in chains:
+                            self.build_master_database(directory, chain)
+
+                    # pds file for single
+                    else:
+                        self.build_master_database(directory, str(entry).lower())
                 else:
-                    self.build_master_database(directory, str(entry).lower())
+                    print('NOT FOUND')
+                    not_found.append(file)
+                    continue
 
 
 # Main Method
