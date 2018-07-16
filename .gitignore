@@ -7,3 +7,5 @@ pip-selfcheck.json
 pyvenv.cfg
 lib/
 .idea/
+bin/
+src/Preprocessing/_pycache_/
