@@ -11,7 +11,7 @@ from src.Preprocessing.AminoAcidProperties import Properties
 # Encode Amino Acids and Fragments to Zero-One Vector
 # Decode Zero-One Vector to Amino Acid sequence
 # Helper functions for creating labels, reading lines etc.
-class Preprocessor:
+class PreprocessorFeedForward:
 
     def __init__(self, inputFile):
         self.inputFile = inputFile

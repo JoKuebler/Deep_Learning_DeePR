@@ -8,4 +8,6 @@ pyvenv.cfg
 lib/
 .idea/
 bin/
-src/Preprocessing/_pycache_/
+src/Preprocessing/__pycache__
+
+

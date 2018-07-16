@@ -3,7 +3,7 @@ from Bio import SeqIO
 
 from src.Helpers.Result_Evaluator import Result_Evaluator
 from src.Network.FeedForwardNetwork import FeedForwardNetwork
-from src.Preprocessing.Preprocessor import Preprocessor
+from src.Preprocessing.PreprocessorFF import PreprocessorFeedForward
 
 
 class FeedForward:
@@ -39,7 +39,7 @@ class FeedForward:
     def init_preprocessor(input):
 
         # Preprocessing Protein to predict
-        preprocessor_object = Preprocessor(input)
+        preprocessor_object = PreprocessorFeedForward(input)
 
         return preprocessor_object
 

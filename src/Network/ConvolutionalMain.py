@@ -11,6 +11,9 @@ class Convolutional:
 
         return convolutional_network
 
+    def init_training_data(self):
+        print('sa')
+
     @staticmethod
     def train_network(network_object, training_data):
 
