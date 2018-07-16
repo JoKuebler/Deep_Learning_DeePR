@@ -127,10 +127,25 @@ class PDB_Parser:
                     not_found.append(file)
                     continue
 
+    # runs master with parameters specified
+    @staticmethod
+    def run_master(directory, query, database_list, rmsd):
+
+        subprocess.run(['/tmp/jonas/PDS/master', '--query', str(directory + query),
+                        '--targetList', str(directory + database_list),
+                        '--rmsdCut', str(rmsd), '--matchOut', str(directory + 'query.match'),
+                        '--seqOut', str(directory + 'query.seq'),
+                        '--structOut', str(directory + 'query.struc')])
+
 
 # Main Method
 if __name__ == '__main__':
 
-    parser_obejct = PDB_Parser()
+    parser_object = PDB_Parser()
 
-    parser_obejct.download_build('/tmp/jonas/PDS/')
+    # parser_object.download_build('/ebio/abt1_share/update_tprpred/data/PDB_Approach/PDS/')
+
+    parser_object.run_master('/tmp/jonas/',
+                             'query.pds',
+                             'PDS/database_list', 4.0)
+
