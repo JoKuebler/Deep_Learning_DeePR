@@ -9,7 +9,7 @@ from sklearn.model_selection import StratifiedKFold
 
 # This class defines the neural network and provides training and prediction methods
 # Adjust Parameters and Layers for Network used here
-class NeuralNetwork:
+class FeedForwardNetwork:
 
     def __init__(self):
 

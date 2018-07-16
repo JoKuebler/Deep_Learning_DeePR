@@ -131,7 +131,7 @@ class PDB_Parser:
     @staticmethod
     def run_master(directory, query, database_list, rmsd):
 
-        subprocess.run(['/tmp/jonas/PDS/master', '--query', str(directory + query),
+        subprocess.run(['/tmp/jonas/run/master', '--query', str(directory + query),
                         '--targetList', str(directory + database_list),
                         '--rmsdCut', str(rmsd), '--matchOut', str(directory + 'query.match'),
                         '--seqOut', str(directory + 'query.seq'),
@@ -141,11 +141,17 @@ class PDB_Parser:
 # Main Method
 if __name__ == '__main__':
 
-    parser_object = PDB_Parser()
+    # parser_object = PDB_Parser()
+    #
+    # # parser_object.download_build('/ebio/abt1_share/update_tprpred/data/PDB_Approach/PDS/')
+    #
+    # parser_object.run_master('/tmp/jonas/run/',
+    #                          'query.pds',
+    #                          'database_list', 4.0)
 
-    # parser_object.download_build('/ebio/abt1_share/update_tprpred/data/PDB_Approach/PDS/')
+    pdbl = PDBList()
+    all_pdb = pdbl.get_all_entries()
 
-    parser_object.run_master('/tmp/jonas/',
-                             'query.pds',
-                             'PDS/database_list', 4.0)
-
+    # 12:30 9.6GB 15891
+    # 13:00 11.GB 16743
+    print(all_pdb.index('1O7F'))

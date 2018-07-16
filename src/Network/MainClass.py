@@ -1,50 +1,52 @@
-from src.Network.PredictorMain import MainPredictor
 from src.Preprocessing.PDBParser import PDB_Parser
+
 
 if __name__ == '__main__':
 
     # ------------ Initializing Objects -------------
     # Initalize Main Runner Object
-    main_runner = MainPredictor()
+    # main_runner_ff = FeedForward()
+    # main_runner_cv = Convolutional()
     # Initialize necessary objects
     # Preprocessor with input data to predict
-    #Preprocessor = main_runner.init_preprocessor(main_runner.test_four)
-    # Network
-    #Network = main_runner.init_network()
+    # Preprocessor = main_runner_ff.init_preprocessor(main_runner_ff.test_four)
+    # Feed forward Network
+    # ffNet = main_runner_ff.init_network()
+    # Convolutinal Network
+    # convNet = main_runner_cv.init_network()
     # Feature Selector
-    #FeatureSelector = FeatureSelection()
+    # FeatureSelector = FeatureSelection()
     # Result Evaluator
-    #Result_Evaluator = Result_Evaluator()
+    # Result_Evaluator = Result_Evaluator()
     PDBParser = PDB_Parser()
     # -----------------------------------------------
 
     # -------------- Preprocessing ------------------
-    #PDBParser.single_chains('/ebio/abt1_share/update_tprpred/data/TestPDB')
+    # PDBParser.single_chains('/ebio/abt1_share/update_tprpred/data/TestPDB')
     PDBParser.download_build('/ebio/abt1_share/update_tprpred/data/PDB_Approach/PDS/')
-
 
     # --------------- Training ----------------------
     # Initialize objects when training model
-    #Training_data = main_runner.init_training_data(Preprocessor)
+    # Training_data = main_runner_ff.init_training_data(Preprocessor)
     # Traing network on data and apply cross validation
-    #main_runner.train_network(Network, Training_data)
-    # main_runner.cross_validate(Network, Training_data)
+    # main_runner_ff.train_network(Network, Training_data)
+    # main_runner_ff.cross_validate(Network, Training_data)
     # -----------------------------------------------
 
     # --------------- Safe & Load -------------------
     # If model has to be saved after training
-    #main_runner.save_network(Network)
+    # main_runner_ff.save_network(Network)
 
     # Load network from saved json
-    # main_runner.load_network(Network)
+    # main_runner_ff.load_network(Network)
     # -----------------------------------------------
 
     # --------------- Prediction --------------------
     # Predict raw training data (fragments)
-    # main_runner.predict_training_data(Network, Preprocessor_two, 0.8)
+    # main_runner_ff.predict_training_data(Network, Preprocessor_two, 0.8)
 
     # predict desired data with threshold (sequences)
-    #main_runner.single_predict(Network, Preprocessor, 0.5)
+    # main_runner_ff.single_predict(Network, Preprocessor, 0.5)
     # -----------------------------------------------
 
     # --------------Evaluation ----------------------

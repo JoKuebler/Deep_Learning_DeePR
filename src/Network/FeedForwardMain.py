@@ -2,11 +2,11 @@ import numpy as np
 from Bio import SeqIO
 
 from src.Helpers.Result_Evaluator import Result_Evaluator
-from src.Network.NeuralNetwork import NeuralNetwork
+from src.Network.FeedForwardNetwork import FeedForwardNetwork
 from src.Preprocessing.Preprocessor import Preprocessor
 
 
-class MainPredictor:
+class FeedForward:
 
     def __init__(self):
         # Positive training set
@@ -47,7 +47,7 @@ class MainPredictor:
     def init_network():
 
         # Train network with Training and Test Set
-        neural_network_object = NeuralNetwork()
+        neural_network_object = FeedForwardNetwork()
 
         return neural_network_object
 
