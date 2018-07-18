@@ -156,4 +156,4 @@ if __name__ == '__main__':
     # 13:00 11.GB 16743
     # 15:30 13GB  20908
     # 17:00 15GB  23668
-    print(all_pdb.index('1WAX'))
+    print(all_pdb.index('3Q33'))
