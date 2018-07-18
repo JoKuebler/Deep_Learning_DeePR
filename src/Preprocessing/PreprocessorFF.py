@@ -189,16 +189,20 @@ class PreprocessorFeedForward:
         initial_findings_index = []
 
         # figure out indexes and probabilities and store them
+        # every 34 peptide gets a probability so just iterate over all of them
         for result in results:
-            counter += 1
-            if result > threshold:
 
+            # counter to keep track of positions
+            counter += 1
+
+            if result > threshold:
+                # store indexes (starting TPR positions) of 34 peptides with prob
+                # higer then the treshold
                 initial_findings_index.append(counter)
                 self.probabilites[counter] = result
 
-        # print(initial_findings_index)
-        # print(prob_dict)
-
+        inital_len = len(initial_findings_index)
+        print("Initial detection: ", initial_findings_index)
         # in order to modify list in the loop we need a while loop here
         while index < len(initial_findings_index):
 
@@ -222,6 +226,11 @@ class PreprocessorFeedForward:
 
             if not deleted:
                 index += 1
+
+        # could also use initial findings but new variable makes it more clear here
+        final_findings = initial_findings_index
+        print('After removal due the overlap', final_findings)
+        print('Removed because of overlap: ', inital_len - len(final_findings))
 
         return initial_findings_index
 

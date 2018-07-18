@@ -14,18 +14,19 @@ class FeedForwardNetwork:
     def __init__(self):
 
         # Define input layer
-        self.inputLayer = Dense(34, input_shape=(34, 26), activation='relu')
+        self.inputLayer = Dense(34, input_shape=(34, 20), activation='relu')
 
         # Define optimizer
-        self.optimizer = optimizers.SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
+        # self.optimizer = optimizers.SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
 
-        # self.optimizer = optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+        self.optimizer = optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
 
         # Define model including layers and activation functions
         self.model = Sequential([
             self.inputLayer,
-            Dropout(0.2),
+            Dropout(0.4),
             Dense(34, activation='relu'),
+            Dropout(0.4),
             Flatten(),
             Dense(1, activation='sigmoid')
         ])

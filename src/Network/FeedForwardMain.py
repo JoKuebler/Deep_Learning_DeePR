@@ -148,6 +148,7 @@ class FeedForward:
 
         new_file.close()
 
+    # predict multiple sequences in one fasta file
     def single_predict(self, network_object, preprocessor_object, threshold):
 
         print('File to predict', preprocessor_object.inputFile)
