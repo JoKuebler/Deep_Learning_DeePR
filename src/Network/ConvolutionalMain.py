@@ -8,6 +8,7 @@ class Convolutional:
 
         # Match search result .match file
         self.match_file = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/Results/query.match'
+        self.rmsd_treshold = 2.0
 
     @staticmethod
     def init_preprocessor():
@@ -19,7 +20,9 @@ class Convolutional:
 
     def init_training_data(self, preprocessor_object):
 
-        preprocessor_object.filter_duplicates(self.match_file)
+        matches = preprocessor_object.filter_duplicates(self.match_file, self.rmsd_treshold)
+
+        preprocessor_object.download_fasta(matches)
 
     @staticmethod
     def init_network():
