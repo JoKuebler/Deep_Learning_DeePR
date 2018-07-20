@@ -13,6 +13,8 @@ class PreprocessorConv:
     @staticmethod
     def filter_duplicates(match_file, rmsd_treshold):
 
+        print('Match file used: ' + str(match_file))
+
         # files with matches
         open_file = open(match_file, 'r')
         
@@ -113,18 +115,13 @@ class PreprocessorConv:
             if str(filename_no_extension + ':' + chain_id) in record.name:
                 return record
 
-    # Shorter sequences get padded with zero vectors (all 20 pos set to 0)
-    def zero_padder(self):
-
-        # TODO zero pad sequences which are to short
-        return 0
-
     # One hot encode sequences
-    def one_hot_encode(self, sequences):
+    def one_hot_encode(self, sequences, padded_length):
 
         encoded_sequences = []
 
         for sequence in sequences:
+
             # Initial Zero Vector
             zero_vector = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -146,6 +143,10 @@ class PreprocessorConv:
 
                 # Reset vector after each amino acid
                 current_vector = zero_vector.copy()
+
+            # Zero pad sequences to make them all of the same length
+            while len(sequence_matrix) < padded_length:
+                sequence_matrix.append(zero_vector)
 
             # return matrix with (length, 20) dim
             encoded_sequences.append(sequence_matrix)
