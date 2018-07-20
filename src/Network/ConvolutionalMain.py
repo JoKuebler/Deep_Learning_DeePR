@@ -1,5 +1,6 @@
 from src.Network.ConvolutionalNetwork import ConvolutionalNetwork
 from src.Preprocessing.PreprocessorConv import PreprocessorConv
+import numpy as np
 
 
 class Convolutional:
@@ -20,9 +21,24 @@ class Convolutional:
 
     def init_training_data(self, preprocessor_object):
 
-        matches = preprocessor_object.filter_duplicates(self.match_file, self.rmsd_treshold)
+        # Filter out duplicates in match file
+        matches_dict = preprocessor_object.filter_duplicates(self.match_file, self.rmsd_treshold)
 
-        preprocessor_object.download_fasta(matches)
+        # Download each Fasta from PDB ID in the match file
+        # preprocessor_object.download_fasta(matches_dict, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/Fasta/')
+
+        # Filter out sequences which are too long (returned in BioPython format)
+        sequence_records = preprocessor_object.length_filter('/ebio/abt1_share/update_tprpred/data/PDB_Approach/Fasta/',
+                                                             matches_dict, 1000)
+
+        # One hot encode each sequence
+        encoded_sequences = preprocessor_object.one_hot_encode(sequence_records)
+
+        encoded_array = np.asarray(encoded_sequences)
+
+        print(encoded_array.shape)
+
+
 
     @staticmethod
     def init_network():
