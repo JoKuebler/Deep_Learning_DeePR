@@ -97,6 +97,21 @@ class PreprocessorConv:
         print("Number of sequences after length filtering: " + str(len(training_sequences)))
         return training_sequences
 
+    @staticmethod
+    def unknown_aa_filter(training_sequences):
+
+        final_seqs = []
+
+        not_allowed = ['X', 'U']
+
+        for record in training_sequences:
+
+            if not any(x in record.seq for x in not_allowed):
+                final_seqs.append(record)
+
+        print('Sequences disregarded due unknown amino acids: ' + str(len(training_sequences) - len(final_seqs)))
+        return final_seqs
+
     # Checks fasta records and only uses the desired chain from the unique dictionary
     @staticmethod
     def filter_chain_from_fasta(filename, match_dict, records):
@@ -152,3 +167,10 @@ class PreprocessorConv:
             encoded_sequences.append(sequence_matrix)
 
         return encoded_sequences
+
+    # create zero one encoded target vector for each sequence
+    def create_target_vector(self, matches_dict, sequence_records):
+
+        # TODO get positions out of matchtes_dict and encode sequence as 1 inside a TPR and 0 as when no TPR
+
+        return 0

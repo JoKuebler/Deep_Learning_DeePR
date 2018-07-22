@@ -21,7 +21,7 @@ class Convolutional:
 
     def init_training_data(self, preprocessor_object):
 
-        padded_length = 500
+        padded_length = 750
 
         # Filter out duplicates in match file
         matches_dict = preprocessor_object.filter_duplicates(self.match_file, self.rmsd_treshold)
@@ -33,8 +33,10 @@ class Convolutional:
         sequence_records = preprocessor_object.length_filter('/ebio/abt1_share/update_tprpred/data/PDB_Approach/Fasta/',
                                                              matches_dict, padded_length)
 
+        final_sequences = preprocessor_object.unknown_aa_filter(sequence_records)
+
         # One hot encode each sequence
-        encoded_sequences = preprocessor_object.one_hot_encode(sequence_records, padded_length)
+        encoded_sequences = preprocessor_object.one_hot_encode(final_sequences, padded_length)
 
         encoded_array = np.asarray(encoded_sequences)
 
