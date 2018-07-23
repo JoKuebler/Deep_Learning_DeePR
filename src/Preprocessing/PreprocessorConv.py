@@ -1,14 +1,16 @@
 # Created by Jonas Kuebler on 07/15/2018
 import subprocess
 import os
+import numpy as np
 from Bio import SeqIO
 
 
 class PreprocessorConv:
 
-    def __init__(self):
+    def __init__(self, padded_length):
         self.amino_acids = ['A', 'R', 'N', 'D', 'C', 'E', 'Q', 'G', 'H', 'I',
                             'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V']
+        self.padded_length = padded_length
 
     @staticmethod
     def filter_duplicates(match_file, rmsd_treshold):
@@ -91,26 +93,28 @@ class PreprocessorConv:
             # just use the chain the match was in by checking the dictionary from the parser
             record = self.filter_chain_from_fasta(filename, matches_dict, records)
 
+            # Check if sequence is in length range
             if len(record.seq) < length:
-                training_sequences.append(record)
+                if self.unknown_aa_filter(record.seq):
+                    training_sequences.append(record)
+                else:
+                    del matches_dict[filename[0:4].upper()]
+            else:
+                del matches_dict[filename[0:4].upper()]
 
-        print("Number of sequences after length filtering: " + str(len(training_sequences)))
+        print("Number of sequences after length/unknown AA filtering: " + str(len(training_sequences)))
+
         return training_sequences
 
     @staticmethod
-    def unknown_aa_filter(training_sequences):
-
-        final_seqs = []
+    def unknown_aa_filter(sequence):
 
         not_allowed = ['X', 'U']
 
-        for record in training_sequences:
-
-            if not any(x in record.seq for x in not_allowed):
-                final_seqs.append(record)
-
-        print('Sequences disregarded due unknown amino acids: ' + str(len(training_sequences) - len(final_seqs)))
-        return final_seqs
+        if not any(x in str(sequence) for x in not_allowed):
+            return True
+        else:
+            return False
 
     # Checks fasta records and only uses the desired chain from the unique dictionary
     @staticmethod
@@ -166,11 +170,57 @@ class PreprocessorConv:
             # return matrix with (length, 20) dim
             encoded_sequences.append(sequence_matrix)
 
-        return encoded_sequences
+        encoded_as_array = np.asarray(encoded_sequences)
+
+        return encoded_as_array
+
+    # Reads in input file and returns sequences as Biopython records
+    @staticmethod
+    def parse_prediction_input(input_file):
+
+        records = list(SeqIO.parse(input_file, 'fasta'))
+
+        return records
 
     # create zero one encoded target vector for each sequence
-    def create_target_vector(self, matches_dict, sequence_records):
+    def create_target_vector(self, match_dict, final_records):
 
-        # TODO get positions out of matchtes_dict and encode sequence as 1 inside a TPR and 0 as when no TPR
+        target_vector_list = []
 
-        return 0
+        # For all training sequences
+        for record in final_records:
+
+            # Get raw PDB ID from the record ID
+            pdb_id = record.id[0:4]
+            print(pdb_id)
+            # only the first chain in the dictionary is used due to the similarity of the sequences
+            chain_id_used = match_dict[pdb_id][0][2]
+
+            # create zero vector with length of sequence
+            target_vector = [[0.0, 1.0]] * len(record.seq)
+
+            # get all matches for particular PDB id
+            for entry in match_dict[pdb_id]:
+                print(entry)
+                # chain ID is stored in the dictionary
+                chain_id_found = entry[2]
+
+                # Get only the chain which is used
+                if chain_id_found == chain_id_used:
+
+                    # get start and end position out of dictionary
+                    tpr_pos = entry[0].split(',')
+                    # Fix index
+                    start_pos = int(tpr_pos[0])-1
+                    end_pos = int(tpr_pos[1])-1
+
+                    # Set correct positions to 1
+                    for i in range(start_pos, end_pos+1):
+                        target_vector[i] = [1.0, 0.0]
+            #
+            while len(target_vector) < self.padded_length:
+                target_vector.append([0.0, 0.0])
+
+            target_vector_list.append(target_vector)
+
+        return target_vector_list

@@ -9,19 +9,20 @@ class Convolutional:
 
         # Match search result .match file
         self.match_file = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/Results/query.match'
-        self.rmsd_treshold = 2.0
+        self.rmsd_treshold = 2.5
+        self.padded_length = 500
 
-    @staticmethod
-    def init_preprocessor():
+        # Predictions
+        self.test_predict = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/3elr.fasta'
+
+    def init_preprocessor(self):
 
         # Preprocessing Protein to predict
-        preprocessor_object = PreprocessorConv()
+        preprocessor_object = PreprocessorConv(self.padded_length)
 
         return preprocessor_object
 
     def init_training_data(self, preprocessor_object):
-
-        padded_length = 750
 
         # Filter out duplicates in match file
         matches_dict = preprocessor_object.filter_duplicates(self.match_file, self.rmsd_treshold)
@@ -31,16 +32,19 @@ class Convolutional:
 
         # Filter out sequences which are too long (returned in BioPython format)
         sequence_records = preprocessor_object.length_filter('/ebio/abt1_share/update_tprpred/data/PDB_Approach/Fasta/',
-                                                             matches_dict, padded_length)
+                                                             matches_dict, self.padded_length)
+        # One hot encode each sequence and create numpy array
+        encoded_sequences = preprocessor_object.one_hot_encode(sequence_records, self.padded_length)
 
-        final_sequences = preprocessor_object.unknown_aa_filter(sequence_records)
+        # Create target vectors (labels)
+        target_vectors = preprocessor_object.create_target_vector(matches_dict, sequence_records)
 
-        # One hot encode each sequence
-        encoded_sequences = preprocessor_object.one_hot_encode(final_sequences, padded_length)
+        encoded_target_vector = np.asarray(target_vectors)
 
-        encoded_array = np.asarray(encoded_sequences)
+        print(encoded_sequences.shape)
+        print(encoded_target_vector.shape)
 
-        print(encoded_array.shape)
+        return [encoded_sequences, encoded_target_vector]
 
     @staticmethod
     def init_network():
@@ -55,4 +59,21 @@ class Convolutional:
 
         network_object.compile_network()
 
-        # network_object.train_network(training_data[0], training_data[1], training_data[2], training_data[3])
+        network_object.train_network(training_data[0], training_data[1])
+
+    def predict(self, network, preprocessor):
+
+        records = preprocessor.parse_prediction_input(self.test_predict)
+
+        encoded = preprocessor.one_hot_encode(records, self.padded_length)
+
+        results = network.predict(encoded)
+
+        new_file = open('/ebio/abt1_share/update_tprpred/data/PDB_Approach/convnet_predictions' + '.txt', 'w')
+
+        for i in range(0, len(results[0])):
+            new_file.write(str(results[0][i]) + '\n')
+
+        new_file.close()
+
+        return results
