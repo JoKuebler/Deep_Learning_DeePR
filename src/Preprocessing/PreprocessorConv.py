@@ -41,7 +41,7 @@ class PreprocessorConv:
             if len(split[1]) > 8:
                 chain_id = split[1][5:6]
             else:
-                chain_id = ''
+                chain_id = 'A'
 
             # RMSD in file
             rmsd = float(split[0])
@@ -65,8 +65,78 @@ class PreprocessorConv:
                         unique_dict[pdb_id].append((tpr_pos, rmsd, chain_id))
                     else:
                         unique_dict[pdb_id] = [(tpr_pos, rmsd, chain_id)]
-        print("Number of PDB entries containing unique matches: " + str(len(unique_dict)))
+        print("Number of different PDB entries containing matches: " + str(len(unique_dict)))
+
         return unique_dict
+
+    @staticmethod
+    def filter_chains(download_dir, matches_dict):
+
+        unique_chains_dict = {}
+        final_records = []
+
+        # For all fasta files in directory
+        for filename in os.listdir(download_dir):
+
+            pdb_id = filename[0:4].upper()
+            records = list(SeqIO.parse(download_dir + filename, 'fasta'))
+            sequence_store = []
+            unique_chains = []
+
+            # Look at all chains
+            for record in records:
+
+                chain_id = record.id[5]
+                # Look at all matches in match dict
+                for entry in matches_dict[pdb_id]:
+                    # Only take the chains which match
+                    if chain_id == entry[2]:
+                        # and only if they are not equal in sequence
+                        if record.seq not in sequence_store:
+                            sequence_store.append(record.seq)
+                            unique_chains.append(chain_id)
+                            final_records.append(record)
+                else:
+                    continue
+
+            unique_chains_dict[pdb_id] = unique_chains
+
+            # Delete identical sequence chains from match dict
+            i = 0
+            while i < len(matches_dict[pdb_id]):
+                if matches_dict[pdb_id][i][2] not in unique_chains_dict[pdb_id]:
+                    del matches_dict[pdb_id][i]
+                else:
+                    i += 1
+
+        return final_records
+
+    @staticmethod
+    def length_filter(chain_filtered, padded_length):
+
+        length_filtered = []
+
+        for record in chain_filtered:
+
+            if len(record.seq) > padded_length:
+                continue
+            else:
+                length_filtered.append(record)
+
+        return length_filtered
+
+    def aa_filter(self, length_filtered):
+
+        aa_filtered = []
+
+        for record in length_filtered:
+
+            if self.unknown_aa_filter(record.seq):
+                aa_filtered.append(record)
+            else:
+                continue
+
+        return aa_filtered
 
     # Download Fasta Files for PDB IDs
     @staticmethod
@@ -79,33 +149,6 @@ class PreprocessorConv:
                             '.fasta', 'https://www.rcsb.org/pdb/download/downloadFastaFiles.do?structureIdList=' +
                             str(key) + '&compressionType=uncompressed'])
 
-    # Filters sequences according to length so the ones too long are removed
-    def length_filter(self, download_dir, matches_dict, length):
-
-        print("Desired length for Training: " + str(length))
-
-        training_sequences = []
-
-        for filename in os.listdir(download_dir):
-
-            records = list(SeqIO.parse(download_dir + filename, 'fasta'))
-
-            # just use the chain the match was in by checking the dictionary from the parser
-            record = self.filter_chain_from_fasta(filename, matches_dict, records)
-
-            # Check if sequence is in length range
-            if len(record.seq) < length:
-                if self.unknown_aa_filter(record.seq):
-                    training_sequences.append(record)
-                else:
-                    del matches_dict[filename[0:4].upper()]
-            else:
-                del matches_dict[filename[0:4].upper()]
-
-        print("Number of sequences after length/unknown AA filtering: " + str(len(training_sequences)))
-
-        return training_sequences
-
     @staticmethod
     def unknown_aa_filter(sequence):
 
@@ -115,24 +158,6 @@ class PreprocessorConv:
             return True
         else:
             return False
-
-    # Checks fasta records and only uses the desired chain from the unique dictionary
-    @staticmethod
-    def filter_chain_from_fasta(filename, match_dict, records):
-
-        filename_no_extension = filename[0:4].upper()
-        # Triple (RMSD, POSMATCH, CHAIN) in the dictionary
-        triple = match_dict[filename_no_extension]
-
-        # Chain ID
-        chain_id = triple[0][2]
-
-        for record in records:
-            # Even though I stored all chains which were matches I decided
-            # here to use only one chain match of each PDB entry in the match file
-            # That is why after it finds a record it gets immediately returned
-            if str(filename_no_extension + ':' + chain_id) in record.name:
-                return record
 
     # One hot encode sequences
     def one_hot_encode(self, sequences, padded_length):
@@ -186,41 +211,41 @@ class PreprocessorConv:
     def create_target_vector(self, match_dict, final_records):
 
         target_vector_list = []
+        # TODO Built target vector from match dict and final records
 
-        # For all training sequences
-        for record in final_records:
-
-            # Get raw PDB ID from the record ID
-            pdb_id = record.id[0:4]
-            print(pdb_id)
-            # only the first chain in the dictionary is used due to the similarity of the sequences
-            chain_id_used = match_dict[pdb_id][0][2]
-
-            # create zero vector with length of sequence
-            target_vector = [[0.0, 1.0]] * len(record.seq)
-
-            # get all matches for particular PDB id
-            for entry in match_dict[pdb_id]:
-                print(entry)
-                # chain ID is stored in the dictionary
-                chain_id_found = entry[2]
-
-                # Get only the chain which is used
-                if chain_id_found == chain_id_used:
-
-                    # get start and end position out of dictionary
-                    tpr_pos = entry[0].split(',')
-                    # Fix index
-                    start_pos = int(tpr_pos[0])-1
-                    end_pos = int(tpr_pos[1])-1
-
-                    # Set correct positions to 1
-                    for i in range(start_pos, end_pos+1):
-                        target_vector[i] = [1.0, 0.0]
-            #
-            while len(target_vector) < self.padded_length:
-                target_vector.append([0.0, 0.0])
-
-            target_vector_list.append(target_vector)
+        # # For all training sequences
+        # for record in final_records:
+        #     print(record)
+        #     # Get raw PDB ID from the record ID
+        #     pdb_id = record.id[0:4]
+        #     chain_id = record.id[5]
+        #     print(chain_id)
+        #
+        #     # create zero vector with length of sequence
+        #     target_vector = [[0.0, 1.0]] * len(record.seq)
+        #
+        #     # get all matches for particular PDB id
+        #     for entry in match_dict[pdb_id]:
+        #
+        #         # get start and end position out of dictionary
+        #         tpr_pos = entry[0].split(',')
+        #         # Fix index
+        #         start_pos = int(tpr_pos[0])-1
+        #         end_pos = int(tpr_pos[1])-1
+        #
+        #         print('PDB', pdb_id)
+        #         print('ENTRY', entry)
+        #         print('LEN', len(target_vector))
+        #         print(start_pos)
+        #         print(end_pos)
+        #
+        #         # Set correct positions to 1
+        #         for i in range(start_pos, end_pos+1):
+        #             target_vector[i] = [1.0, 0.0]
+        #     # Padding
+        #     while len(target_vector) < self.padded_length:
+        #         target_vector.append([0.0, 1.0])
+        #
+        #     target_vector_list.append(target_vector)
 
         return target_vector_list

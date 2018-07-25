@@ -10,7 +10,7 @@ class ConvolutionalNetwork:
     def __init__(self):
 
         # Define input layer
-        self.input_layer = Conv1D(68, 34, padding='same', kernel_regularizer=l2(0.01), input_shape=(750, 20))
+        self.input_layer = Conv1D(88, 34, padding='same', kernel_regularizer=l2(0.01), input_shape=(750, 20))
 
         # Define optimizer
         self.optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
@@ -33,7 +33,7 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Fit network to data with parameters: Batch Size, Epochs
-        self.model.fit(training_samples, training_labels, batch_size=64, epochs=20, shuffle=True, verbose=2)
+        self.model.fit(training_samples, training_labels, batch_size=64, epochs=5, shuffle=True, verbose=2)
 
     def predict(self, sequences):
 

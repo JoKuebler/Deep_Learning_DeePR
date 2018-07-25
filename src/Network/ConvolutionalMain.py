@@ -8,12 +8,13 @@ class Convolutional:
     def __init__(self):
 
         # Match search result .match file
-        self.match_file = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/Results/query.match'
+        self.match_file = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/results/query1qqe228.match'
+        self.second_match_file = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/results/query1fch366.match'
         self.rmsd_treshold = 2.5
-        self.padded_length = 500
+        self.padded_length = 750
 
         # Predictions
-        self.test_predict = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/3elr.fasta'
+        self.test_predict = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/1kt1.fasta'
 
     def init_preprocessor(self):
 
@@ -28,16 +29,23 @@ class Convolutional:
         matches_dict = preprocessor_object.filter_duplicates(self.match_file, self.rmsd_treshold)
 
         # Download each Fasta from PDB ID in the match file
-        # preprocessor_object.download_fasta(matches_dict, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/Fasta/')
+        # preprocessor_object.download_fasta(matches_dict, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/FastaTest/')
 
         # Filter out sequences which are too long (returned in BioPython format)
-        sequence_records = preprocessor_object.length_filter('/ebio/abt1_share/update_tprpred/data/PDB_Approach/Fasta/',
-                                                             matches_dict, self.padded_length)
+        chain_filtered = preprocessor_object.filter_chains('/ebio/abt1_share/update_tprpred/data/PDB_Approach/Fasta1qqe228/',
+                                                             matches_dict)
+        print(len(chain_filtered))
+        length_filtered = preprocessor_object.length_filter(chain_filtered, self.padded_length)
+        print(len(length_filtered))
+
+        aa_filtered = preprocessor_object.aa_filter(length_filtered)
+        print(len(aa_filtered))
+
         # One hot encode each sequence and create numpy array
-        encoded_sequences = preprocessor_object.one_hot_encode(sequence_records, self.padded_length)
+        encoded_sequences = preprocessor_object.one_hot_encode(aa_filtered, self.padded_length)
 
         # Create target vectors (labels)
-        target_vectors = preprocessor_object.create_target_vector(matches_dict, sequence_records)
+        target_vectors = preprocessor_object.create_target_vector(matches_dict, aa_filtered)
 
         encoded_target_vector = np.asarray(target_vectors)
 

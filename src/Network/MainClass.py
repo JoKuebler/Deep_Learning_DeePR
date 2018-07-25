@@ -1,5 +1,6 @@
 from src.Network.FeedForwardMain import FeedForward
 from src.Network.ConvolutionalMain import Convolutional
+import random
 
 if __name__ == '__main__':
 
@@ -35,6 +36,7 @@ if __name__ == '__main__':
     Training_data_conv = main_runner_conv.init_training_data(Preprocessor_conv)
     # Traing network on data and apply cross validation
     # main_runner_ff.train_network(ffNet, Training_data)
+    # main_runner_conv.train_network(convNet, Training_data_conv)
     # main_runner_ff.cross_validate(Network, Training_data)
     # -----------------------------------------------
 
@@ -49,6 +51,7 @@ if __name__ == '__main__':
     # --------------- Prediction --------------------
     # Predict raw training data (fragments)
     # main_runner_ff.predict_training_data(Network, Preprocessor_two, 0.8)
+    # main_runner_conv.predict(convNet, Preprocessor_conv)
 
     # predict desired data with threshold (sequences)
     # main_runner_ff.single_predict(ffNet, Preprocessor_ff, 0.5)
