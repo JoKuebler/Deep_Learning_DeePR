@@ -13,6 +13,7 @@ class PreprocessorConv:
         self.padded_length = padded_length
 
     @staticmethod
+    # creates a dictionary which stores all matches with sequence, position, chain and RMSD
     def filter_duplicates(match_file, rmsd_treshold):
 
         print('Match file used: ' + str(match_file))
@@ -69,6 +70,8 @@ class PreprocessorConv:
 
         return unique_dict
 
+    # Takes the matches dictionary and filters chains out if they are identical
+    # Sequences provides via download directory
     @staticmethod
     def filter_chains(download_dir, matches_dict):
 
@@ -109,6 +112,8 @@ class PreprocessorConv:
                 else:
                     i += 1
 
+        print(matches_dict)
+
         return final_records
 
     @staticmethod
@@ -138,6 +143,16 @@ class PreprocessorConv:
 
         return aa_filtered
 
+    @staticmethod
+    def unknown_aa_filter(sequence):
+
+        not_allowed = ['X', 'U']
+
+        if not any(x in str(sequence) for x in not_allowed):
+            return True
+        else:
+            return False
+
     # Download Fasta Files for PDB IDs
     @staticmethod
     def download_fasta(unique_dict, download_dir):
@@ -150,14 +165,11 @@ class PreprocessorConv:
                             str(key) + '&compressionType=uncompressed'])
 
     @staticmethod
-    def unknown_aa_filter(sequence):
+    def single_chains_fasta(final_records, output_directory):
 
-        not_allowed = ['X', 'U']
+        for record in final_records:
 
-        if not any(x in str(sequence) for x in not_allowed):
-            return True
-        else:
-            return False
+            SeqIO.write(record, output_directory + record.name[0:6].replace(':', '_') + '.fasta', "fasta")
 
     # One hot encode sequences
     def one_hot_encode(self, sequences, padded_length):

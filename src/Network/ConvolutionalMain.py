@@ -41,18 +41,21 @@ class Convolutional:
         aa_filtered = preprocessor_object.aa_filter(length_filtered)
         print(len(aa_filtered))
 
+        # Write all files to single chains
+        preprocessor_object.single_chains_fasta(aa_filtered, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/1qqe_single_chains/')
+
         # One hot encode each sequence and create numpy array
         encoded_sequences = preprocessor_object.one_hot_encode(aa_filtered, self.padded_length)
 
         # Create target vectors (labels)
-        target_vectors = preprocessor_object.create_target_vector(matches_dict, aa_filtered)
+        # target_vectors = preprocessor_object.create_target_vector(matches_dict, aa_filtered)
 
-        encoded_target_vector = np.asarray(target_vectors)
+        # encoded_target_vector = np.asarray(target_vectors)
 
         print(encoded_sequences.shape)
-        print(encoded_target_vector.shape)
+        # print(encoded_target_vector.shape)
 
-        return [encoded_sequences, encoded_target_vector]
+        return [encoded_sequences]
 
     @staticmethod
     def init_network():
