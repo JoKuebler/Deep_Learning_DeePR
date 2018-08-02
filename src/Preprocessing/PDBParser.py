@@ -92,7 +92,7 @@ class PDB_Parser:
         # testIDs = ['3hhb', '2hr2', '2hhb', '1zb1', '5MQX','111f', '1y8m', '2pqn', '2pqr', '1nzn', '1pc2']
 
         # Get all entries
-        for entry in all_pdb[11194:]:
+        for entry in all_pdb:
 
             if entry not in leave_out_strip:
 

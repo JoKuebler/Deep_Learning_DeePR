@@ -112,8 +112,6 @@ class PreprocessorConv:
                 else:
                     i += 1
 
-        print(matches_dict)
-
         return final_records
 
     @staticmethod
