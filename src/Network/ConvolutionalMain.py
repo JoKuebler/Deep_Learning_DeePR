@@ -1,6 +1,6 @@
 from src.Network.ConvolutionalNetwork import ConvolutionalNetwork
 from src.Preprocessing.PreprocessorConv import PreprocessorConv
-
+from src.Helpers.HHR_Parser import HhrParser
 
 
 class Convolutional:
@@ -23,7 +23,10 @@ class Convolutional:
 
         return preprocessor_object
 
-    def init_training_data(self, preprocessor_object):
+    # This takes query MASTER hits and filters out duplicates as well as identical chains
+    # More filtering according to length and amino acids
+    # Writes proteins into single chains for hhpred
+    def get_training_sequences(self, preprocessor_object):
 
         # Filter out duplicates in match file
         matches_dict = preprocessor_object.filter_duplicates(self.second_match_file, self.rmsd_treshold)
@@ -32,8 +35,8 @@ class Convolutional:
         # preprocessor_object.download_fasta(matches_dict, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/FastaTest/')
 
         # Filter out sequences which are too long (returned in BioPython format)
-        chain_filtered = preprocessor_object.filter_chains('/ebio/abt1_share/update_tprpred/data/PDB_Approach/Fasta1fch366/',
-                                                             matches_dict)
+        chain_filtered = preprocessor_object.filter_chains('/ebio/abt1_share/update_tprpred/data/'
+                                                           'PDB_Approach/Fasta1fch366/', matches_dict)
         print(len(chain_filtered))
         length_filtered = preprocessor_object.length_filter(chain_filtered, self.padded_length)
         print(len(length_filtered))
@@ -42,10 +45,16 @@ class Convolutional:
         print(len(aa_filtered))
 
         # Write all files to single chains
-        preprocessor_object.single_chains_fasta(aa_filtered, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/1fch_single_chains/')
+        preprocessor_object.single_chains_fasta(aa_filtered, '/ebio/abt1_share/update_tprpred'
+                                                             '/data/PDB_Approach/1fch_single_chains/')
+
+        return aa_filtered
+
+    # Once final sequences are validated with HHpred they get encoded here
+    def encode_data(self, preprocessor_object, final_sequences):
 
         # One hot encode each sequence and create numpy array
-        encoded_sequences = preprocessor_object.one_hot_encode(aa_filtered, self.padded_length)
+        encoded_sequences = preprocessor_object.one_hot_encode(final_sequences, self.padded_length)
 
         # Create target vectors (labels)
         # target_vectors = preprocessor_object.create_target_vector(matches_dict, aa_filtered)
