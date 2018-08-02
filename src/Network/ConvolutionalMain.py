@@ -1,6 +1,6 @@
 from src.Network.ConvolutionalNetwork import ConvolutionalNetwork
 from src.Preprocessing.PreprocessorConv import PreprocessorConv
-import numpy as np
+
 
 
 class Convolutional:
@@ -26,13 +26,13 @@ class Convolutional:
     def init_training_data(self, preprocessor_object):
 
         # Filter out duplicates in match file
-        matches_dict = preprocessor_object.filter_duplicates(self.match_file, self.rmsd_treshold)
+        matches_dict = preprocessor_object.filter_duplicates(self.second_match_file, self.rmsd_treshold)
 
         # Download each Fasta from PDB ID in the match file
         # preprocessor_object.download_fasta(matches_dict, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/FastaTest/')
 
         # Filter out sequences which are too long (returned in BioPython format)
-        chain_filtered = preprocessor_object.filter_chains('/ebio/abt1_share/update_tprpred/data/PDB_Approach/Fasta1qqe228/',
+        chain_filtered = preprocessor_object.filter_chains('/ebio/abt1_share/update_tprpred/data/PDB_Approach/Fasta1fch366/',
                                                              matches_dict)
         print(len(chain_filtered))
         length_filtered = preprocessor_object.length_filter(chain_filtered, self.padded_length)
@@ -42,7 +42,7 @@ class Convolutional:
         print(len(aa_filtered))
 
         # Write all files to single chains
-        preprocessor_object.single_chains_fasta(aa_filtered, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/1qqe_single_chains/')
+        preprocessor_object.single_chains_fasta(aa_filtered, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/1fch_single_chains/')
 
         # One hot encode each sequence and create numpy array
         encoded_sequences = preprocessor_object.one_hot_encode(aa_filtered, self.padded_length)
