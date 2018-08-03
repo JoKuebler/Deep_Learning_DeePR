@@ -31,31 +31,34 @@ class Convolutional:
         # Filter out duplicates in match file
         matches_dict = preprocessor_object.filter_duplicates(self.match_file, self.rmsd_treshold)
 
-        print(matches_dict)
+        print('Unique Sequences with matches: ' + str(len(matches_dict)))
 
         # Download each Fasta from PDB ID in the match file
         # preprocessor_object.download_fasta(matches_dict, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/FastaTest/')
 
-        # Filter out sequences which are too long (returned in BioPython format)
+        # # Filter out sequences which are too long (returned in BioPython format)
         chain_filtered = preprocessor_object.filter_chains('/ebio/abt1_share/update_tprpred/data/'
-                                                           'PDB_Approach/Fasta1qqe228/', matches_dict)
-        #print(len(chain_filtered))
-        length_filtered = preprocessor_object.length_filter(chain_filtered, self.padded_length)
+                                                            'PDB_Approach/Fasta1qqe228/', matches_dict)
 
-        #print(len(length_filtered))
+        print('Unique Sequences with matches after filtering identical chains: ' + str(len(matches_dict)))
 
-        aa_filtered = preprocessor_object.aa_filter(length_filtered)
+        length_filtered = preprocessor_object.length_filter(chain_filtered, self.padded_length, matches_dict)
 
+        print('Unique Sequences with matches after filtering too long chains: ' + str(len(matches_dict)))
+
+        #
+        aa_filtered = preprocessor_object.aa_filter(length_filtered, matches_dict)
+
+        print('Unique Sequences with matches after filtering unknown amino acids: ' + str(len(matches_dict)))
+        #
         hhr_parser = HhrParser('/ebio/abt1_share/update_tprpred/data/PDB_Approach/1qqe_single_chains/results/hhr_test/')
         hhr_parser.filter_files(matches_dict)
 
-        print(len(matches_dict))
-        print(len(aa_filtered))
-
         # Write all files to single chains
-        # preprocessor_object.single_chains_fasta(aa_filtered, '/ebio/abt1_share/update_tprpred'
-        #                                                    '/data/PDB_Approach/1fch_single_chains/')
+        preprocessor_object.single_chains_fasta(aa_filtered, '/ebio/abt1_share/update_tprpred'
+                                                             '/data/PDB_Approach/1fch_single_chains/')
 
+        print(matches_dict)
         return aa_filtered
 
     # Once final sequences are validated with HHpred they get encoded here

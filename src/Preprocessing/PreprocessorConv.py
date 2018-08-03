@@ -25,6 +25,7 @@ class PreprocessorConv:
         unique_split = []
 
         unique_dict = {}
+        i = 0
 
         # parse each line
         for line in open_file:
@@ -51,21 +52,25 @@ class PreprocessorConv:
             for ch in ['[', ']', '(', ')']:
                 split[2] = split[2].replace(ch, '')
 
-            tpr_pos = split[2]
+            tpr_start = split[2].split(',')[0]
+            tpr_end = split[2].split(',')[1]
+
+            match_entry = {"rmsd": rmsd, "chain": chain_id, "tpr_start": tpr_start, "tpr_end": tpr_end}
+            match_entry_array = [match_entry]
 
             # only keep the ones lower as the treshold
             if rmsd < rmsd_treshold:
 
                 # if filename with identical match positions already exists then filter out
-                if (pdb_id, tpr_pos) not in unique_split:
+                if (pdb_id, tpr_start) not in unique_split:
 
-                    unique_split.append((pdb_id, tpr_pos))
+                    unique_split.append((pdb_id, tpr_start))
 
                     # dictionary fill
                     if pdb_id in unique_dict:
-                        unique_dict[pdb_id].append((tpr_pos, rmsd, chain_id))
+                        unique_dict[pdb_id].append(match_entry)
                     else:
-                        unique_dict[pdb_id] = [(tpr_pos, rmsd, chain_id)]
+                        unique_dict[pdb_id] = match_entry_array
         print("Number of different PDB entries containing matches: " + str(len(unique_dict)))
 
         return unique_dict
@@ -92,8 +97,9 @@ class PreprocessorConv:
                 chain_id = record.id[5]
                 # Look at all matches in match dict
                 for entry in matches_dict[pdb_id]:
+
                     # Only take the chains which match
-                    if chain_id == entry[2]:
+                    if chain_id == entry['chain']:
                         # and only if they are not equal in sequence
                         if record.seq not in sequence_store:
                             sequence_store.append(record.seq)
@@ -107,36 +113,67 @@ class PreprocessorConv:
             # Delete identical sequence chains from match dict
             i = 0
             while i < len(matches_dict[pdb_id]):
-                if matches_dict[pdb_id][i][2] not in unique_chains_dict[pdb_id]:
+                if matches_dict[pdb_id][i]['chain'] not in unique_chains_dict[pdb_id]:
                     del matches_dict[pdb_id][i]
                 else:
                     i += 1
 
+            # if all matches for one pdb are removed delete the dictionary key
+            if len(matches_dict[pdb_id]) == 0:
+                del matches_dict[pdb_id]
+                continue
+
         return final_records
 
     @staticmethod
-    def length_filter(chain_filtered, padded_length):
+    def length_filter(chain_filtered, padded_length, matches_dict):
 
         length_filtered = []
 
         for record in chain_filtered:
 
+            pdb_id = record.id[0:4]
+            chain = record.id[5]
+
             if len(record.seq) > padded_length:
+                index = 0
+                for entry in matches_dict[pdb_id]:
+                    if entry['chain'] == chain:
+                        del matches_dict[pdb_id][index]
+                    index = index + 1
+
+                    # if all matches for one pdb are removed delete the dictionary key
+                    if len(matches_dict[pdb_id]) == 0:
+                        del matches_dict[pdb_id]
+
                 continue
             else:
                 length_filtered.append(record)
 
         return length_filtered
 
-    def aa_filter(self, length_filtered):
+    def aa_filter(self, length_filtered, matches_dict):
 
         aa_filtered = []
 
         for record in length_filtered:
 
+            pdb_id = record.id[0:4]
+            chain = record.id[5]
+
             if self.unknown_aa_filter(record.seq):
                 aa_filtered.append(record)
             else:
+                index = 0
+                for entry in matches_dict[pdb_id]:
+                    if entry['chain'] == chain:
+                        del matches_dict[pdb_id][index]
+                    index = index + 1
+
+                    # if all matches for one pdb are removed delete the dictionary key
+                    if len(matches_dict[pdb_id]) == 0:
+                        del matches_dict[pdb_id]
+
                 continue
 
         return aa_filtered

@@ -13,8 +13,6 @@ class HhrParser:
     # keeps only files which are tpr like class in scope
     def filter_files(self, matches_dict):
 
-        print(matches_dict)
-
         # For all hhr files in directory
         for filename in os.listdir(self.hhr_directory):
 
