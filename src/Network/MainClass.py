@@ -33,7 +33,8 @@ if __name__ == '__main__':
     # --------------- Training ----------------------
     # Initialize objects when training model
     # Training_data = main_runner_ff.init_training_data(Preprocessor_ff)
-    main_runner_conv.get_training_sequences(Preprocessor_conv)
+    matches_dict = main_runner_conv.get_training_sequences(Preprocessor_conv)
+    final_seq_director = main_runner_conv.eval_hhpred_results(matches_dict)
     # Traing network on data and apply cross validation
     # main_runner_ff.train_network(ffNet, Training_data)
     # main_runner_conv.train_network(convNet, Training_data_conv)

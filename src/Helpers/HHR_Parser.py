@@ -16,52 +16,127 @@ class HhrParser:
         # For all hhr files in directory
         for filename in os.listdir(self.hhr_directory):
 
-            # store hhr in json file in the directory
-            output_file = open(self.hhr_directory + 'output.json', 'w+')
+            print(filename)
 
-            subprocess.run(['python3', '/ebio/abt1_share/update_tprpred/code/src/Helpers/hhr2json.py', self.hhr_directory + filename], stdout=output_file)
+            if filename.startswith('hhsearch'):
+                # store hhr in json file in the directory
+                output_file = open(self.hhr_directory + 'output.json', 'w+')
 
-            # open each json file and check if hit is in identifier
-            with open(self.hhr_directory + 'output.json') as file:
+                subprocess.run(['python3', '/ebio/abt1_share/update_tprpred/code/src/Helpers/hhr2json.py', self.hhr_directory + filename], stdout=output_file)
+
+                # open each json file and check if hit is in identifier
+                with open(self.hhr_directory + 'output.json') as file:
+
+                    data = json.load(file)
+
+                    # get PDB Id to find in matches file
+                    pdb_id = data['info']['Query'][0:4]
+                    chain = data['info']['Query'][5]
+
+                    hits = data['hits']
+                    tpr_hit = False
+
+                    # for each hit print the class which is found under 'hit' in json
+                    for hit in hits:
+
+                        # set flag to true if hit is in one of the TPR classes
+                        if any(x in hit['hit'] for x in self.identifier):
+
+                            template_begin = hit['template_begin']
+                            template_end = hit['template_end']
+
+                            if pdb_id in matches_dict:
+                                # for each hit check each entry in match dict and see if hit is in template of hhr
+                                for entry in matches_dict[pdb_id]:
+
+                                    # start pos of match in match dict
+                                    start = int(entry['tpr_start'])
+
+                                    # if start pos of match is in template then tpr hit is good to use
+                                    if template_begin <= start <= template_end:
+                                        tpr_hit = True
+                                        continue
+
+                    # if flag is still negative remove the hrr file since the sequence was no TPR hit
+                    if not tpr_hit:
+                        print('Removed', str(filename))
+                        subprocess.run(['rm', self.hhr_directory + filename])
+
+                        if pdb_id in matches_dict:
+
+                            for index, entry in enumerate(matches_dict[pdb_id]):
+                                if entry['chain'] == chain:
+                                    del matches_dict[pdb_id][index]
+                                    if len(matches_dict[pdb_id]) == 0:
+                                        del matches_dict[pdb_id]
+
+                subprocess.run(['rm', self.hhr_directory + 'output.json'])
+
+        self.write_matches_json(self.hhr_directory, matches_dict)
+        print(len(matches_dict))
+
+        return self.hhr_directory
+
+    @staticmethod
+    def write_matches_json(directory, matches_dict):
+
+        # store hhr in json file in the directory
+        output_file = open(directory + 'match_dict.json', 'w+')
+
+        output_file.write(str(matches_dict).replace('\'', '"'))
+
+        output_file.close()
+
+    @staticmethod
+    def read_matches_json(directory):
+
+        for filename in os.listdir(directory):
+
+            with open(directory + filename) as file:
                 data = json.load(file)
 
-                print(filename)
-                # get PDB Id to find in matches file
-                pdb_id = data['info']['Query'][0:4]
+        return data
 
-                hits = data['hits']
-                tpr_hit = False
+    # Looks at hhr directory after filtering and gets fasta sequences -> training data
+    def get_fasta_from_hhr(self, fasta_directories):
 
-                # for each hit print the class which is found under 'hit' in json
-                for hit in hits:
+        fasta_seen = []
+        # hhr files
+        for filename in os.listdir(self.hhr_directory):
+            # get name of pdb id and chain
+            pdb_id_chain = filename.split('.')[0][-6:]
 
-                    # set flag to true if hit is in one of the TPR classes
-                    if any(x in hit['hit'] for x in self.identifier):
+            # search for fasta file with same name in directories
+            for directory in fasta_directories:
 
-                        template_begin = hit['template_begin']
-                        template_end = hit['template_end']
+                for fasta_file in os.listdir(directory):
 
-                        # for each hit check each entry in match dict and see if hit is in template of hhr
-                        for entry in matches_dict[pdb_id]:
+                    if fasta_file[0:6] == pdb_id_chain:
+                        if fasta_file not in fasta_seen:
 
-                            # start pos of match in match dict
-                            start = int(entry[0].split(',')[0])
+                            fasta_seen.append(fasta_file)
 
-                            # if start pos of match is in template then tpr hit is good to use
-                            if template_begin <= start <= template_end:
-                                tpr_hit = True
-                                continue
+                            # copy to final directory
+                            subprocess.run(['cp', directory + fasta_file,
+                                            '/ebio/abt1_share/update_tprpred/data/PDB_Approach/final_fastas/'])
 
-                # if flag is still negative remove the hrr file since the sequence was no TPR hit
-                if not tpr_hit:
-                    print('Removed', str(filename))
-                    subprocess.run(['rm', self.hhr_directory + filename])
+        return fasta_seen
 
-        subprocess.run(['rm', self.hhr_directory + 'output.json'])
+    @staticmethod
+    def proof(matches_dict, final_dir):
+
+        for filename in os.listdir(final_dir):
+
+            pdb_id = filename[0:4]
+            print(matches_dict[pdb_id])
 
 
 if __name__ == '__main__':
 
-    parser = HhrParser('/ebio/abt1_share/update_tprpred/data/PDB_Approach/Fasta1qqe228/results/hhr_test/')
+    parser = HhrParser('/ebio/abt1_share/update_tprpred/data/PDB_Approach/1qqe_single_chains/results/hhr_filtered/')
 
-    parser.filter_files()
+    parser.get_fasta_from_hhr(['/ebio/abt1_share/update_tprpred/data/PDB_Approach/1qqe_single_chains/'])
+
+    matches_dict = parser.read_matches_json('/ebio/abt1_share/update_tprpred/data/PDB_Approach/final_matches_dict/')
+
+    parser.proof(matches_dict, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/final_fastas')

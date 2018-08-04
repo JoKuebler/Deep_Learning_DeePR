@@ -10,7 +10,7 @@ class Convolutional:
         # Match search result .match file
         self.match_file = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/results/query1qqe228.match'
         self.second_match_file = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/results/query1fch366.match'
-        self.rmsd_treshold = 2.5
+        self.rmsd_treshold = 2
         self.padded_length = 750
 
         # Predictions
@@ -29,37 +29,45 @@ class Convolutional:
     def get_training_sequences(self, preprocessor_object):
 
         # Filter out duplicates in match file
-        matches_dict = preprocessor_object.filter_duplicates(self.match_file, self.rmsd_treshold)
+        matches_dict = preprocessor_object.filter_duplicates(self.second_match_file, self.rmsd_treshold)
 
         print('Unique Sequences with matches: ' + str(len(matches_dict)))
 
         # Download each Fasta from PDB ID in the match file
         # preprocessor_object.download_fasta(matches_dict, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/FastaTest/')
 
-        # # Filter out sequences which are too long (returned in BioPython format)
+        # Filter out hits with identical chains
         chain_filtered = preprocessor_object.filter_chains('/ebio/abt1_share/update_tprpred/data/'
-                                                            'PDB_Approach/Fasta1qqe228/', matches_dict)
+                                                            'PDB_Approach/Fasta1fch366/', matches_dict)
 
         print('Unique Sequences with matches after filtering identical chains: ' + str(len(matches_dict)))
 
+        # Filter out sequences which are too long (returned in BioPython format)
         length_filtered = preprocessor_object.length_filter(chain_filtered, self.padded_length, matches_dict)
 
         print('Unique Sequences with matches after filtering too long chains: ' + str(len(matches_dict)))
 
-        #
+        # Filter out unknown amino acids
         aa_filtered = preprocessor_object.aa_filter(length_filtered, matches_dict)
 
         print('Unique Sequences with matches after filtering unknown amino acids: ' + str(len(matches_dict)))
-        #
-        hhr_parser = HhrParser('/ebio/abt1_share/update_tprpred/data/PDB_Approach/1qqe_single_chains/results/hhr_test/')
-        hhr_parser.filter_files(matches_dict)
 
         # Write all files to single chains
         preprocessor_object.single_chains_fasta(aa_filtered, '/ebio/abt1_share/update_tprpred'
                                                              '/data/PDB_Approach/1fch_single_chains/')
+        return matches_dict
 
-        print(matches_dict)
-        return aa_filtered
+    # Takes matches dict and looks at hhr files produced by hhpred
+    @staticmethod
+    def eval_hhpred_results(matches_dict):
+
+        # Filter out sequences which were not a hit in a TPR related scope class when run with hhpred
+        # Filter out sequences where hit is not in template range of hhpred hit
+        hhr_parser = HhrParser('/ebio/abt1_share/update_tprpred/data/PDB_Approach/1fch_single_chains/results/hhr_filtered/')
+        # returns directory where remaining sequences are stored
+        final_seq_directory = hhr_parser.filter_files(matches_dict)
+
+        return final_seq_directory
 
     # Once final sequences are validated with HHpred they get encoded here
     def encode_data(self, preprocessor_object, final_sequences):

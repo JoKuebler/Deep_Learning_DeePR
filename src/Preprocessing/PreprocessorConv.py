@@ -71,6 +71,7 @@ class PreprocessorConv:
                         unique_dict[pdb_id].append(match_entry)
                     else:
                         unique_dict[pdb_id] = match_entry_array
+
         print("Number of different PDB entries containing matches: " + str(len(unique_dict)))
 
         return unique_dict
@@ -91,37 +92,40 @@ class PreprocessorConv:
             sequence_store = []
             unique_chains = []
 
-            # Look at all chains
-            for record in records:
+            if pdb_id in matches_dict:
 
-                chain_id = record.id[5]
-                # Look at all matches in match dict
-                for entry in matches_dict[pdb_id]:
+                # Look at all chains
+                for record in records:
 
-                    # Only take the chains which match
-                    if chain_id == entry['chain']:
-                        # and only if they are not equal in sequence
-                        if record.seq not in sequence_store:
-                            sequence_store.append(record.seq)
-                            unique_chains.append(chain_id)
-                            final_records.append(record)
-                else:
+                    chain_id = record.id[5]
+                    # Look at all matches in match dict
+                    for entry in matches_dict[pdb_id]:
+
+                        # Only take the chains which match
+                        if chain_id == entry['chain']:
+
+                            # and only if they are not equal in sequence
+                            if record.seq not in sequence_store:
+                                sequence_store.append(record.seq)
+                                unique_chains.append(chain_id)
+                                final_records.append(record)
+                            else:
+                                continue
+
+                unique_chains_dict[pdb_id] = unique_chains
+
+                # Delete identical sequence chains from match dict
+                i = 0
+                while i < len(matches_dict[pdb_id]):
+                    if matches_dict[pdb_id][i]['chain'] not in unique_chains_dict[pdb_id]:
+                        del matches_dict[pdb_id][i]
+                    else:
+                        i += 1
+
+                # if all matches for one pdb are removed delete the dictionary key
+                if len(matches_dict[pdb_id]) == 0:
+                    del matches_dict[pdb_id]
                     continue
-
-            unique_chains_dict[pdb_id] = unique_chains
-
-            # Delete identical sequence chains from match dict
-            i = 0
-            while i < len(matches_dict[pdb_id]):
-                if matches_dict[pdb_id][i]['chain'] not in unique_chains_dict[pdb_id]:
-                    del matches_dict[pdb_id][i]
-                else:
-                    i += 1
-
-            # if all matches for one pdb are removed delete the dictionary key
-            if len(matches_dict[pdb_id]) == 0:
-                del matches_dict[pdb_id]
-                continue
 
         return final_records
 
