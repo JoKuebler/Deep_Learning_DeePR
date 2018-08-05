@@ -183,6 +183,36 @@ class PreprocessorConv:
         return aa_filtered
 
     @staticmethod
+    def filter_overlaps(matches_dict):
+
+        all_starts = []
+
+        for pdb_id in matches_dict:
+
+            for entry in matches_dict[pdb_id]:
+
+                all_starts.append(int(entry['tpr_start']))
+
+            all_starts.sort()
+
+            to_delete = []
+            for i in range(0, len(all_starts)):
+                if i+1 < len(all_starts):
+                    if all_starts[i+1] - all_starts[i] <= 34:
+
+                        to_delete.append(all_starts[i+1])
+                        all_starts.remove(all_starts[i + 1])
+
+            all_starts = []
+
+            for index, entry in enumerate(matches_dict[pdb_id]):
+
+                if int(entry['tpr_start']) in to_delete:
+                    del matches_dict[pdb_id][index]
+
+        return matches_dict
+
+    @staticmethod
     def unknown_aa_filter(sequence):
 
         not_allowed = ['X', 'U']
