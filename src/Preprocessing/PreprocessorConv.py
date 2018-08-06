@@ -240,6 +240,20 @@ class PreprocessorConv:
 
             SeqIO.write(record, output_directory + record.name[0:6].replace(':', '_') + '.fasta', "fasta")
 
+    @staticmethod
+    def read_final_sequences(directory):
+
+        seqs = []
+        records_seqs = []
+
+        for file in os.listdir(directory):
+            records = list(SeqIO.parse(directory + file, 'fasta'))
+            for record in records:
+                seqs.append(record.seq)
+                records_seqs.append(record)
+
+        return [seqs, records_seqs]
+
     # One hot encode sequences
     def one_hot_encode(self, sequences, padded_length):
 
@@ -292,41 +306,35 @@ class PreprocessorConv:
     def create_target_vector(self, match_dict, final_records):
 
         target_vector_list = []
-        # TODO Built target vector from match dict and final records
 
-        # # For all training sequences
-        # for record in final_records:
-        #     print(record)
-        #     # Get raw PDB ID from the record ID
-        #     pdb_id = record.id[0:4]
-        #     chain_id = record.id[5]
-        #     print(chain_id)
-        #
-        #     # create zero vector with length of sequence
-        #     target_vector = [[0.0, 1.0]] * len(record.seq)
-        #
-        #     # get all matches for particular PDB id
-        #     for entry in match_dict[pdb_id]:
-        #
-        #         # get start and end position out of dictionary
-        #         tpr_pos = entry[0].split(',')
-        #         # Fix index
-        #         start_pos = int(tpr_pos[0])-1
-        #         end_pos = int(tpr_pos[1])-1
-        #
-        #         print('PDB', pdb_id)
-        #         print('ENTRY', entry)
-        #         print('LEN', len(target_vector))
-        #         print(start_pos)
-        #         print(end_pos)
-        #
-        #         # Set correct positions to 1
-        #         for i in range(start_pos, end_pos+1):
-        #             target_vector[i] = [1.0, 0.0]
-        #     # Padding
-        #     while len(target_vector) < self.padded_length:
-        #         target_vector.append([0.0, 1.0])
-        #
-        #     target_vector_list.append(target_vector)
+        # For all training sequences
+        for record in final_records:
+
+            # Get raw PDB ID from the record ID
+            pdb_id = record.id[0:4]
+            chain_id = record.id[5]
+
+            # create zero vector with length of sequence
+            target_vector = [[0.0, 1.0]] * len(record.seq)
+
+            # get all matches for particular PDB id
+            for entry in match_dict[pdb_id]:
+
+                if chain_id == entry['chain']:
+                    # get start and end position out of dictionary
+                    tpr_start = int(entry['tpr_start'])
+                    tpr_end = int(entry['tpr_end'])
+                    print(len(target_vector))
+                    print(tpr_end)
+                    # Set correct positions to 1
+                    for i in range(tpr_start, tpr_end+1):
+
+                        target_vector[i] = [1.0, 0.0]
+
+            # Padding
+            while len(target_vector) < self.padded_length:
+                target_vector.append([0.0, 1.0])
+
+            target_vector_list.append(target_vector)
 
         return target_vector_list

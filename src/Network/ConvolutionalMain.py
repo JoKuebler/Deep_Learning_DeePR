@@ -1,6 +1,7 @@
 from src.Network.ConvolutionalNetwork import ConvolutionalNetwork
 from src.Preprocessing.PreprocessorConv import PreprocessorConv
 from src.Helpers.HHR_Parser import HhrParser
+import numpy as np
 
 
 class Convolutional:
@@ -71,25 +72,30 @@ class Convolutional:
         # Filter out sequences where hit is not in template range of hhpred hit
         hhr_parser = HhrParser('/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/all_hhr/')
         # returns directory where remaining sequences are stored
-        final_seq_directory = hhr_parser.filter_files(matches_dict)
-
-        return final_seq_directory
+        hhr_parser.filter_files(matches_dict)
 
     # Once final sequences are validated with HHpred they get encoded here
-    def encode_data(self, preprocessor_object, final_sequences):
+    def encode_data(self, preprocessor_object, final_sequences_dir, ):
 
-        # One hot encode each sequence and create numpy array
-        encoded_sequences = preprocessor_object.one_hot_encode(final_sequences, self.padded_length)
+        # this returns sequences as list of raw strings and as list of biopython records
+        sequences = preprocessor_object.read_final_sequences(final_sequences_dir)
 
-        # Create target vectors (labels)
-        # target_vectors = preprocessor_object.create_target_vector(matches_dict, aa_filtered)
+        # One hot encode each sequence and create numpy array use string list
+        encoded_sequences = preprocessor_object.one_hot_encode(sequences[0], self.padded_length)
 
-        # encoded_target_vector = np.asarray(target_vectors)
+        hhr_parser = HhrParser()
+        matches_dict = hhr_parser.read_matches_json('/ebio/abt1_share/update_tprpred/data/'
+                                                    'PDB_Approach/All_at_once/tpr_info.json')
+
+        # Create target vectors (labels) use records list
+        target_vectors = preprocessor_object.create_target_vector(matches_dict, sequences[1])
+
+        encoded_target_vector = np.asarray(target_vectors)
 
         print(encoded_sequences.shape)
-        # print(encoded_target_vector.shape)
+        print(encoded_target_vector.shape)
 
-        return [encoded_sequences]
+        return [encoded_sequences, encoded_target_vector]
 
     @staticmethod
     def init_network():
