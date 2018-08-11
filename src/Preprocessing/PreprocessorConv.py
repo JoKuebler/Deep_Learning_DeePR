@@ -254,6 +254,36 @@ class PreprocessorConv:
 
         return [seqs, records_seqs]
 
+    # Cuts single protein in windows and returns fragments
+    # This may improves the runtime since each protein is cutted and stored to the memory one by one
+    def cutInWindows_single(self, record, window_size):
+
+        sequence = record.seq
+
+        # declare start of window
+        window_start = int()
+        protein_length = len(record.seq)
+
+        # calculate end of first window by adding size to start position
+        window_end = window_start + window_size
+
+        fragments = []
+
+        # slide window over file until end is reached
+        while window_end <= protein_length:
+
+            current_fragment = sequence[window_start:window_end]
+
+            # increment window start pos
+            window_start += 1
+
+            # increment window end pos
+            window_end += 1
+
+            fragments.append(current_fragment)
+
+        return fragments
+
     # One hot encode sequences
     def one_hot_encode(self, sequences, padded_length):
 

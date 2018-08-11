@@ -6,11 +6,11 @@ if __name__ == '__main__':
 
     # ------------ Initializing Objects -------------
     # Initalize Main Runner Object
-    # main_runner_ff = FeedForward()
+    main_runner_ff = FeedForward()
     main_runner_conv = Convolutional()
 
     # Preprocessor with input data to predict
-    # Preprocessor_ff = main_runner_ff.init_preprocessor(main_runner_ff.test_four)
+    Preprocessor_ff = main_runner_ff.init_preprocessor(main_runner_ff.test_four)
     Preprocessor_conv = main_runner_conv.init_preprocessor()
 
     # Feed forward Network
@@ -35,8 +35,13 @@ if __name__ == '__main__':
     # Training_data = main_runner_ff.init_training_data(Preprocessor_ff)
     # matches_dict = main_runner_conv.get_training_sequences(Preprocessor_conv)
     # main_runner_conv.eval_hhpred_results(matches_dict)
-    Training_data_conv = main_runner_conv.encode_data(Preprocessor_conv, '/ebio/abt1_share/update_tprpred/data'
-                                                                         '/PDB_Approach/All_at_once/final_fasta/')
+    # Training_data_conv = main_runner_conv.encode_data(Preprocessor_conv, '/ebio/abt1_share/update_tprpred/data'
+    #                                                                     '/PDB_Approach/All_at_once/final_fasta/')
+    # Training_data_conv = main_runner_conv.encode_as_window(Preprocessor_conv, '/ebio/abt1_share/update_tprpred/data'
+    #                                                                            '/PDB_Approach/All_at_once/final_fasta/',
+    #                                                                            '/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/tpr_info.json')
+
+    Training_data_conv = main_runner_ff.init_training_data(Preprocessor_ff)
 
     # Traing network on data and apply cross validation
     # main_runner_ff.train_network(ffNet, Training_data)
@@ -55,7 +60,7 @@ if __name__ == '__main__':
     # --------------- Prediction --------------------
     # Predict raw training data (fragments)
     # main_runner_ff.predict_training_data(Network, Preprocessor_two, 0.8)
-    # main_runner_conv.predict(convNet, Preprocessor_conv)
+    # main_runner_conv.predict_fragments(convNet, Preprocessor_conv)
 
     # predict desired data with threshold (sequences)
     # main_runner_ff.single_predict(ffNet, Preprocessor_ff, 0.5)

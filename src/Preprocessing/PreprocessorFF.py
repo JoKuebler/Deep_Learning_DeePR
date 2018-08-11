@@ -13,7 +13,7 @@ from src.Preprocessing.AminoAcidProperties import Properties
 # Helper functions for creating labels, reading lines etc.
 class PreprocessorFeedForward:
 
-    def __init__(self, inputFile):
+    def __init__(self, inputFile=''):
         self.inputFile = inputFile
         self.ids = []
         self.probabilites = {}
@@ -171,9 +171,15 @@ class PreprocessorFeedForward:
     @staticmethod
     def create_labels(amount_pos, amount_neg):
 
-        pos_labels = [1] * amount_pos
-        neg_labels = [0] * amount_neg
-        labels = np.array(pos_labels + neg_labels).reshape(amount_pos + amount_neg, 1)
+        positive = [1, 0]
+        negative = [0, 1]
+        pos_labels = np.zeros((amount_pos, 2))
+        pos_labels[:, 0] = 1
+
+        neg_labels = np.zeros((amount_neg, 2))
+        neg_labels[:, 1] = 1
+
+        labels = np.concatenate((pos_labels, neg_labels), axis=0)
 
         return labels
 

@@ -1,6 +1,7 @@
 from src.Network.ConvolutionalNetwork import ConvolutionalNetwork
 from src.Preprocessing.PreprocessorConv import PreprocessorConv
 from src.Helpers.HHR_Parser import HhrParser
+from src.Preprocessing.PreprocessorFF import PreprocessorFeedForward
 import numpy as np
 
 
@@ -11,12 +12,13 @@ class Convolutional:
         # Match search result .match file
         self.match_file = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/results/query1qqe228.match'
         self.second_match_file = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/results/query1fch366.match'
+        self.third_match_file = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/results/query1ihg307.match'
         self.total_matches = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/total_matches.match'
         self.rmsd_treshold = 2
         self.padded_length = 750
 
         # Predictions
-        self.test_predict = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/1kt1.fasta'
+        self.test_predict = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/test_predict.txt'
 
     def init_preprocessor(self):
 
@@ -31,17 +33,17 @@ class Convolutional:
     def get_training_sequences(self, preprocessor_object):
 
         # Filter out duplicates in match file
-        matches_dict = preprocessor_object.filter_duplicates(self.total_matches, self.rmsd_treshold)
+        matches_dict = preprocessor_object.filter_duplicates(self.third_match_file, self.rmsd_treshold)
 
         print('Unique Sequences with matches: ' + str(len(matches_dict)))
         #
         # Download each Fasta from PDB ID in the match file
-        # preprocessor_object.download_fasta(matches_dict, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/'
-        #                                                  'All_at_once/new_download_fasta/')
+        preprocessor_object.download_fasta(matches_dict, '/ebio/abt1_share/update_tprpred/'
+                                                         'data/PDB_Approach/Fasta1ihg307/')
 
         # Filter out hits with identical chains
-        chain_filtered = preprocessor_object.filter_chains('/ebio/abt1_share/update_tprpred/data/'
-                                                           'PDB_Approach/All_at_once/new_download_fasta/', matches_dict)
+        chain_filtered = preprocessor_object.filter_chains('/ebio/abt1_share/update_tprpred'
+                                                           '/data/PDB_Approach/Fasta1ihg307/', matches_dict)
 
         print('Unique Sequences with matches after filtering identical chains: ' + str(len(matches_dict)))
 
@@ -60,8 +62,8 @@ class Convolutional:
         print(len(overlap_filtered_dict))
 
         # Write all files to single chains
-        preprocessor_object.single_chains_fasta(aa_filtered, '/ebio/abt1_share/update_tprpred'
-                                                             '/data/PDB_Approach/All_at_once/single_chains_all/')
+        preprocessor_object.single_chains_fasta(aa_filtered, '/ebio/abt1_share/update_tprpred/data/'
+                                                             'PDB_Approach/1ihg_single_chains/')
         return overlap_filtered_dict
 
     # Takes matches dict and looks at hhr files produced by hhpred
@@ -97,6 +99,35 @@ class Convolutional:
 
         return [encoded_sequences, encoded_target_vector]
 
+    # cuts input sequence in 34 windows and stores positive data
+    def encode_as_window(self, preprocessor_object, final_sequences_dir, matches_dict):
+
+        # this returns sequences as list of raw strings and as list of biopython records
+        sequences = preprocessor_object.read_final_sequences(final_sequences_dir)
+
+        new_file = open('/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/positive_data' + '.txt', 'w')
+
+        hhr_parser = HhrParser()
+        matches_json = hhr_parser.read_matches_json(matches_dict)
+
+        # sequences[1] stores biopython records
+        for record in sequences[1]:
+
+            pdb_id = str(record.id[0:4])
+            chain_id = str(record.id[5])
+
+            for entry in matches_json[pdb_id]:
+
+                if entry['chain'] == chain_id:
+                    fragment = record.seq[int(entry['tpr_start']):int(entry['tpr_end'])+1]
+                    if len(fragment) < 33:
+                        print(pdb_id)
+                        print(entry)
+                    else:
+                        new_file.write(str(record.seq[int(entry['tpr_start']):int(entry['tpr_end'])+1]) + '\n')
+
+        new_file.close()
+
     @staticmethod
     def init_network():
 
@@ -110,7 +141,7 @@ class Convolutional:
 
         network_object.compile_network()
 
-        network_object.train_network(training_data[0], training_data[1])
+        network_object.train_network(training_data[0], training_data[1], training_data[2], training_data[3])
 
     def predict(self, network, preprocessor):
 
@@ -128,3 +159,17 @@ class Convolutional:
         new_file.close()
 
         return results
+
+    def predict_fragments(self, network, preprocessor):
+
+        with open(self.test_predict) as input_file:
+            content = input_file.readlines()
+
+        stripped = [x.rstrip() for x in content]
+
+        prediction_set = preprocessor.one_hot_encode(stripped, 34)
+
+        results = network.predict(prediction_set)
+
+        print(results)
+

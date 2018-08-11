@@ -10,13 +10,13 @@ class FeedForward:
 
     def __init__(self):
         # Positive training set
-        self.training_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/positive_set_TPR1.txt'
+        self.training_set_file = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/positive_data.txt'
 
         # Negative training set
-        self.training_negative_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/new_negative_set.txt'
+        self.training_negative_set_file = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/negative_data.txt'
 
         # Positive test set
-        self.test_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/test_set_pos.txt'
+        self.test_set_file = '/ebio/abt1/jkuebler/Desktop/windows.txt'
 
         # Negative test set
         self.test_negative_set_file = '/ebio/abt1_share/update_tprpred/data/Training_Data/test_set_neg.txt'
@@ -56,6 +56,7 @@ class FeedForward:
         # Read in training Data
         print('Positive Training Data:', self.training_set_file)
         pos_set = preprocessor_object.read_line_files(self.training_set_file)
+        print(len(pos_set))
 
         print('Negative Training Data:', self.training_negative_set_file)
         neg_set = preprocessor_object.read_line_files(self.training_negative_set_file)
