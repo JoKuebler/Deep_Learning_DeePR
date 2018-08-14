@@ -33,7 +33,6 @@ class ConvolutionalNetwork:
     def train_network(self, training_samples, training_labels, test_samples, test_labels):
 
         self.model.summary()
-
         # Fit network to data with parameters: Batch Size, Epochs
         self.model.fit(training_samples, training_labels, batch_size=100, epochs=50, shuffle=True, verbose=2)
 
