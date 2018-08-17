@@ -25,12 +25,10 @@ class ConvolutionalNetwork:
             Dense(2, activation='softmax', name='output_layer')
         ])
 
-    def compile_network(self):
+    # Trains the network
+    def train_network(self, training_samples, training_labels, test_samples=None, test_labels=None):
 
         self.model.compile(loss='binary_crossentropy', optimizer=self.optimizer, metrics=['accuracy'])
-
-    # Trains the network
-    def train_network(self, training_samples, training_labels, test_samples, test_labels):
 
         self.model.summary()
         # Fit network to data with parameters: Batch Size, Epochs

@@ -73,7 +73,7 @@ class Encoder:
         target_neg[:, 1] = 1
 
         # Final target vector
-        target = np.concatenate((target_pos, target_pos), axis=0)
+        target = np.concatenate((target_pos, target_neg), axis=0)
 
         return target
 
