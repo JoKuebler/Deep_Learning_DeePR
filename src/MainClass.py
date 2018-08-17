@@ -12,6 +12,8 @@ if __name__ == '__main__':
     # Create Encoder object
     encoder = Encoder()
     # Encode Training Data
-    encoder.encode(pos_data, neg_data)
+    enc_data, target = encoder.encode(pos_data, neg_data)
+
+
 
 
