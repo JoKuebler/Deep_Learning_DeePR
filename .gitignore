@@ -11,3 +11,7 @@ bin/
 src/Preprocessing/__pycache__/
 src/Tools/__pychache__/
 src/Tools/__pycache__/TPRPred.cpython-35.pyc
+
+__pycache__
+*/__pycache__
+**/__pycache__
