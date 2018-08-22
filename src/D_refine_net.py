@@ -1,17 +1,16 @@
-from keras.layers import Conv1D, GlobalMaxPooling1D
+from keras.layers import Dropout, Flatten
 from keras.layers.core import Dense
 from keras.models import Sequential
 from keras.optimizers import Adam
-from keras.regularizers import l2
 from keras.models import model_from_json
 
 
-class ConvolutionalNetwork:
+class RefinementNetwork:
 
     def __init__(self):
 
         # Define input layer
-        self.input_layer = Conv1D(64, 3, padding='same', kernel_regularizer=l2(0.01), input_shape=(34, 20))
+        self.input_layer = Dense(64, input_shape=(2,), activation='relu')
 
         # Define optimizer
         self.optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
@@ -19,10 +18,11 @@ class ConvolutionalNetwork:
         # Define model including layers and activation functions
         self.model = Sequential([
             self.input_layer,
-            Conv1D(64, 5, padding='same', kernel_regularizer=l2(0.01)),
-            Conv1D(64, 7, padding='same', kernel_regularizer=l2(0.01)),
-            GlobalMaxPooling1D(),
-            Dense(2, activation='softmax', name='output_layer')
+            Dropout(0.4),
+            Dense(34),
+            Dropout(0.4),
+            Flatten(),
+            Dense(1, activation='sigmoid', name='output_layer')
         ])
 
     def train_network(self, data, target, test_data=None, test_target=None):

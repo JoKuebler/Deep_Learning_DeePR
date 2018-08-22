@@ -1,7 +1,9 @@
 from src.A_file_reader import FileReader
 from src.B_encoding import Encoder
 from src.C_conv_net import ConvolutionalNetwork
+from src.D_refine_net import RefinementNetwork
 import argparse
+import numpy as np
 
 if __name__ == '__main__':
 
@@ -17,6 +19,8 @@ if __name__ == '__main__':
     file_read = FileReader()
     # Init convolutional network
     conv_net = ConvolutionalNetwork()
+    # Init Refinement network
+    # ref_net = RefinementNetwork()
     # Init Encoder object
     encoder = Encoder()
 
@@ -44,15 +48,12 @@ if __name__ == '__main__':
         conv_net.load_model(args.load)
 
         # Read in protein and cut into windows
-        pred_data = file_read.read_pred_data(args.input, 34, 5)
+        pred_data = file_read.read_pred_data(args.input, 34, 1)
 
         # Encode input
         enc_pred, target = encoder.encode(pred_data)
 
         conv_net.predict(pred_data, enc_pred)
-
-
-
 
 
 
