@@ -30,6 +30,7 @@ class FileReader:
         for record in records:
 
             sequence = record.seq
+            seq_id = record.id[:4]
 
             # declare start of window
             window_start = int()
@@ -52,7 +53,7 @@ class FileReader:
 
                 fragments.append(current_fragment)
 
-            return fragments
+            return fragments, seq_id
 
 
 

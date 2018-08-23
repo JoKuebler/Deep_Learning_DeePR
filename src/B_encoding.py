@@ -1,4 +1,5 @@
 import numpy as np
+import json
 
 
 class Encoder:
@@ -10,6 +11,9 @@ class Encoder:
                             'G', 'P', 'A', 'V', 'I', 'L', 'M', 'F', 'Y', 'W']
 
         self.unknown_aa = ['X', 'x', 'B', 'b', 'Z', 'z', 'U', 'u']
+
+        # TPR JSON which stores information about all training sequences
+        self.tpr_info = self.read_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/tpr_info.json')
 
     def encode(self, pos_data, neg_data=None):
         """
@@ -77,4 +81,29 @@ class Encoder:
         target = np.concatenate((target_pos, target_neg), axis=0)
 
         return target
+
+    def create_refine_data(self, predictions, seq_id):
+
+        data = np.array([x[0] for x in predictions])
+
+        print(len(data))
+        padded_data = np.pad(data, (0, 717-len(data)), 'constant', constant_values=(0, 0))
+
+        target_vector = np.zeros(717)
+
+        for entry in self.tpr_info[seq_id]:
+            target_vector[int(entry["tpr_start"])-1] = 1
+
+        print(padded_data.shape)
+        print(len(target_vector))
+
+        return padded_data, target_vector
+
+    @ staticmethod
+    def read_json(json_file):
+
+        with open(json_file) as file:
+            data = json.load(file)
+
+        return data
 

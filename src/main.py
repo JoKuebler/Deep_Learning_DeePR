@@ -48,12 +48,12 @@ if __name__ == '__main__':
         conv_net.load_model(args.load)
 
         # Read in protein and cut into windows
-        pred_data = file_read.read_pred_data(args.input, 34, 1)
+        pred_data, seq_id = file_read.read_pred_data(args.input, 34, 1)
 
         # Encode input
         enc_pred, target = encoder.encode(pred_data)
 
-        conv_net.predict(pred_data, enc_pred)
+        conv_net.predict(pred_data, enc_pred, seq_id)
 
 
 

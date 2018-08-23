@@ -4,6 +4,7 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 from keras.regularizers import l2
 from keras.models import model_from_json
+from src.B_encoding import Encoder
 
 
 class ConvolutionalNetwork:
@@ -21,9 +22,15 @@ class ConvolutionalNetwork:
             self.input_layer,
             Conv1D(64, 5, padding='same', kernel_regularizer=l2(0.01)),
             Conv1D(64, 7, padding='same', kernel_regularizer=l2(0.01)),
+            Conv1D(64, 9, padding='same', kernel_regularizer=l2(0.01)),
+            Conv1D(64, 11, padding='same', kernel_regularizer=l2(0.01)),
+            Conv1D(64, 19, padding='same', kernel_regularizer=l2(0.01)),
+            Conv1D(64, 35, padding='same', kernel_regularizer=l2(0.01)),
             GlobalMaxPooling1D(),
             Dense(2, activation='softmax', name='output_layer')
         ])
+
+        self.encoder = Encoder()
 
     def train_network(self, data, target, test_data=None, test_target=None):
         """
@@ -40,14 +47,14 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        self.model.fit(data, target, validation_split=0.1, batch_size=100, epochs=30, shuffle=True, verbose=2)
+        self.model.fit(data, target, validation_split=0.1, batch_size=100, epochs=150, shuffle=True, verbose=2)
 
         # Evaluate model and print results
         scores = self.model.evaluate(test_data, test_target)
         print("\n%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
         print('[ERROR,ACCURACY]', scores)
 
-    def predict(self, seqs, enc_seq):
+    def predict(self, seqs, enc_seq, seq_id):
         """
         Predict encoded sequences
         :param seqs: Raw sequences for output later
@@ -63,8 +70,11 @@ class ConvolutionalNetwork:
         # show the inputs and predicted outputs
         for i in range(len(seqs)):
             print(i+1, seqs[i], predictions[i])
+            # print(predictions[i][0])
 
-        return predictions
+        padded_refine_data, target_vector = self.encoder.create_refine_data(predictions, seq_id)
+
+        return predictions, padded_refine_data, target_vector
 
     def save_model(self, directory):
         """
