@@ -24,8 +24,6 @@ class ConvolutionalNetwork:
             Conv1D(64, 7, padding='same', kernel_regularizer=l2(0.01)),
             Conv1D(64, 9, padding='same', kernel_regularizer=l2(0.01)),
             Conv1D(64, 11, padding='same', kernel_regularizer=l2(0.01)),
-            Conv1D(64, 19, padding='same', kernel_regularizer=l2(0.01)),
-            Conv1D(64, 35, padding='same', kernel_regularizer=l2(0.01)),
             GlobalMaxPooling1D(),
             Dense(2, activation='softmax', name='output_layer')
         ])
@@ -47,32 +45,36 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        self.model.fit(data, target, validation_split=0.1, batch_size=100, epochs=150, shuffle=True, verbose=2)
+        self.model.fit(data, target, validation_split=0.1, batch_size=100, epochs=75, shuffle=True, verbose=2)
 
         # Evaluate model and print results
         scores = self.model.evaluate(test_data, test_target)
         print("\n%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
         print('[ERROR,ACCURACY]', scores)
 
-    def predict(self, seqs, enc_seq, seq_id):
+    def predict(self, seqs, enc_seq, seq_id, chain_id):
         """
         Predict encoded sequences
         :param seqs: Raw sequences for output later
         :param enc_seq: Encoded sequences to predict
-        :return:
+        :param seq_id: Sequence ID to find the true TPR in the tpr json for target vector
+        :param chain_id: Chain ID to find the true TPR in the tpr json for target vector
+        :return: Return predictions of CNN as well as padded data vector and target vector for refinement network
         """
 
+        # Print how many sequences are predicted (windows)
         print(str(len(seqs)) + ' Sequences predicted')
 
         # Make predictions
         predictions = self.model.predict(enc_seq, batch_size=20, verbose=2)
 
         # show the inputs and predicted outputs
-        for i in range(len(seqs)):
-            print(i+1, seqs[i], predictions[i])
+        # for i in range(len(seqs)):
+            # print(i+1, seqs[i], predictions[i])
             # print(predictions[i][0])
 
-        padded_refine_data, target_vector = self.encoder.create_refine_data(predictions, seq_id)
+        # for each prediction made by the CNN pass the data to encode it for the refinement network
+        padded_refine_data, target_vector = self.encoder.create_refine_data(predictions, seq_id, chain_id)
 
         return predictions, padded_refine_data, target_vector
 
