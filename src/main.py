@@ -4,6 +4,7 @@ from src.C_conv_net import ConvolutionalNetwork
 from src.D_refine_net import RefinementNetwork
 import argparse
 import numpy as np
+import os
 
 if __name__ == '__main__':
 
@@ -20,7 +21,7 @@ if __name__ == '__main__':
     # Init convolutional network
     conv_net = ConvolutionalNetwork()
     # Init Refinement network
-    # ref_net = RefinementNetwork()
+    ref_net = RefinementNetwork()
     # Init Encoder object
     encoder = Encoder()
 
@@ -47,13 +48,25 @@ if __name__ == '__main__':
         # Load model from given directory
         conv_net.load_model(args.load)
 
-        # Read in protein and cut into windows
-        pred_data, seq_id = file_read.read_pred_data(args.input, 34, 1)
+        refine_training = []
+        refine_training_labels = []
+        seq_id_to_map = []
 
-        # Encode input
-        enc_pred, target = encoder.encode(pred_data)
+        # Predict sequences to get prob profiles for refine network training
+        for file in os.listdir(args.input):
+            # Read in protein and cut into windows
+            pred_data, seq_id, chain_id = file_read.read_pred_data(args.input + file, 34, 1)
 
-        conv_net.predict(pred_data, enc_pred, seq_id)
+            # Encode input
+            enc_pred, target = encoder.encode(pred_data)
 
+            predictions, refine_data, refine_target = conv_net.predict(pred_data, enc_pred, seq_id, chain_id)
 
+            # Store prob profile for next network to train
+            refine_training.append(refine_data)
+            refine_training_labels.append(refine_target)
+            seq_id_to_map.append(seq_id + ' ' + chain_id)
+
+        # This takes the data of the CNN predictions and trains next network
+        ref_net.train_predict(np.asarray(refine_training), np.asarray(refine_training_labels), seq_id_to_map)
 

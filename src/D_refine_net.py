@@ -1,8 +1,9 @@
 from keras.layers import Dropout, Flatten
 from keras.layers.core import Dense
 from keras.models import Sequential
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 from keras.models import model_from_json
+import numpy as np
 
 
 class RefinementNetwork:
@@ -10,19 +11,24 @@ class RefinementNetwork:
     def __init__(self):
 
         # Define input layer
-        self.input_layer = Dense(64, input_shape=(2,), activation='relu')
+        self.input_layer = Dense(128, input_shape=(717,), activation='relu')
 
         # Define optimizer
         self.optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+        # self.optimizer = SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
 
         # Define model including layers and activation functions
         self.model = Sequential([
             self.input_layer,
-            Dropout(0.4),
-            Dense(34),
-            Dropout(0.4),
-            Flatten(),
-            Dense(1, activation='sigmoid', name='output_layer')
+            Dropout(0.2),
+            Dense(128),
+            Dropout(0.2),
+            Dense(128),
+            Dense(64),
+            Dropout(0.2),
+            Dense(64),
+            Dense(28),
+            Dense(717, activation='softmax')
         ])
 
     def train_network(self, data, target, test_data=None, test_target=None):
@@ -43,26 +49,27 @@ class RefinementNetwork:
         self.model.fit(data, target, validation_split=0.1, batch_size=100, epochs=30, shuffle=True, verbose=2)
 
         # Evaluate model and print results
-        scores = self.model.evaluate(test_data, test_target)
-        print("\n%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
-        print('[ERROR,ACCURACY]', scores)
+        # scores = self.model.evaluate(test_data, test_target)
+        # print("\n%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
+        # print('[ERROR,ACCURACY]', scores)
 
-    def predict(self, seqs, enc_seq):
+    def predict(self, cnn_probs, seq_id_to_map):
         """
         Predict encoded sequences
-        :param seqs: Raw sequences for output later
-        :param enc_seq: Encoded sequences to predict
+        :param cnn_probs:
+        :param seq_id_to_map:
         :return:
         """
 
-        print(str(len(seqs)) + ' Sequences predicted')
-
         # Make predictions
-        predictions = self.model.predict(enc_seq, batch_size=20, verbose=2)
+        predictions = self.model.predict(cnn_probs, verbose=2)
 
-        # show the inputs and predicted outputs
-        for i in range(len(seqs)):
-            print(i+1, seqs[i], predictions[i])
+        for i in range(len(predictions)):
+            print(seq_id_to_map[i])
+            print(predictions[i])
+            print('SUM ', sum(predictions[i]))
+            max_value = max(predictions[i])
+            print('MAX ', max_value)
 
         return predictions
 
@@ -80,22 +87,19 @@ class RefinementNetwork:
         self.model.save_weights(directory + 'model.h5')
         print('Model Saved to Disk!')
 
-    def load_model(self, directory):
-        """
-        Loads model from json and h5 file in given directory
-        :param directory: Directory to load from given via script parameter
-        """
 
-        # load json and create model
-        json_file = open(directory + 'model.json', 'r')
-        loaded_model_json = json_file.read()
-        json_file.close()
-        loaded_model = model_from_json(loaded_model_json)
+    def train_predict(self, conv_predictions, conv_labels, seq_id_to_map):
 
-        # load weights into new model
-        loaded_model.load_weights(directory + 'model.h5')
+        for i in range(820):
+            print(conv_predictions[i])
+            print(conv_labels[i])
 
-        # Set model
-        self.model = loaded_model
+        self.train_network(conv_predictions[:820], conv_labels[:820])
+
+        self.predict(conv_predictions[821:], seq_id_to_map[821:])
+
+
+
+
 
 
