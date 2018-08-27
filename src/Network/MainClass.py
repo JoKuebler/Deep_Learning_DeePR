@@ -33,7 +33,8 @@ if __name__ == '__main__':
     # --------------- Training ----------------------
     # Initialize objects when training model
     # Training_data = main_runner_ff.init_training_data(Preprocessor_ff)
-    # matches_dict = main_runner_conv.get_training_sequences(Preprocessor_conv)
+    matches_dict = main_runner_conv.get_training_sequences(Preprocessor_conv)
+
     # main_runner_conv.eval_hhpred_results(matches_dict)
     # Training_data_conv = main_runner_conv.encode_data(Preprocessor_conv, '/ebio/abt1_share/update_tprpred/data'
     #                                                                     '/PDB_Approach/All_at_once/final_fasta/')
@@ -41,11 +42,11 @@ if __name__ == '__main__':
     #                                                                            '/PDB_Approach/All_at_once/final_fasta/',
     #                                                                            '/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/tpr_info.json')
 
-    Training_data_conv = main_runner_ff.init_training_data(Preprocessor_ff)
+    # Training_data_conv = main_runner_ff.init_training_data(Preprocessor_ff)
 
     # Traing network on data and apply cross validation
     # main_runner_ff.train_network(ffNet, Training_data)
-    main_runner_conv.train_network(convNet, Training_data_conv)
+    # main_runner_conv.train_network(convNet, Training_data_conv)
     # main_runner_ff.cross_validate(Network, Training_data)
     # -----------------------------------------------
 

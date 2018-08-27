@@ -90,12 +90,12 @@ class HhrParser:
         return self.hhr_directory
 
     @staticmethod
-    def write_matches_json(directory, matches_dict):
+    def write_matches_json(directory, match_dict):
 
         # store hhr in json file in the directory
         output_file = open(directory + 'match_dict.json', 'w+')
 
-        output_file.write(str(matches_dict).replace('\'', '"'))
+        output_file.write(str(match_dict).replace('\'', '"'))
 
         output_file.close()
 

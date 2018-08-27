@@ -3,6 +3,7 @@ import subprocess
 import os
 import numpy as np
 from Bio import SeqIO
+from src.Helpers.HHR_Parser import HhrParser
 
 
 class PreprocessorConv:
@@ -19,13 +20,12 @@ class PreprocessorConv:
         print('Match file used: ' + str(match_file))
 
         # files with matches
-        open_file = open(match_file, 'r')
+        open_file = open(match_file, 'r', encoding='utf-8-sig')
         
         # list to hold unique matches
         unique_split = []
 
         unique_dict = {}
-        i = 0
 
         # parse each line
         for line in open_file:
@@ -76,6 +76,73 @@ class PreprocessorConv:
 
         return unique_dict
 
+    def build_matches_dict(self, match_file, fasta_dir):
+
+        match_dict = {}
+        # list to hold unique matches
+        unique_split = []
+
+        open_file = open(match_file, 'r', encoding='utf-8-sig')
+        counter = 0
+
+        for file in os.listdir(fasta_dir):
+
+            filename = str(file[:-6])
+
+            print(filename)
+            counter += 1
+            print(counter)
+
+            # parse each line
+            for line in open_file:
+
+                # split at white space
+                split = line.split()
+                split[1] = split[1].split('/')[-1]
+                # PDB Id in file
+                pdb_id = split[1][0:4].upper()
+                # RMSD in file
+                rmsd = float(split[0])
+
+                # Check if match is from a chain by looking at the name (xxxx_A.pds vs xxxx.pds)
+                if len(split[1]) > 8:
+                    chain_id = split[1][5:6]
+                else:
+                    chain_id = 'A'
+
+                match_str = pdb_id + '_' + chain_id
+
+                if filename == match_str:
+
+                    # replace unnecessary chars
+                    for ch in ['[', ']', '(', ')']:
+                        split[2] = split[2].replace(ch, '')
+
+                    tpr_start = split[2].split(',')[0]
+                    tpr_end = split[2].split(',')[1]
+
+                    match_entry = {"rmsd": rmsd, "chain": chain_id, "tpr_start": tpr_start, "tpr_end": tpr_end}
+                    match_entry_array = [match_entry]
+
+                    # if filename with identical match positions already exists then filter out
+                    if (pdb_id, tpr_start) not in unique_split:
+                        unique_split.append((pdb_id, tpr_start))
+
+                        # dictionary fill
+                        if pdb_id in match_dict:
+                            match_dict[pdb_id].append(match_entry)
+                        else:
+                            match_dict[pdb_id] = match_entry_array
+
+            open_file.seek(0)
+
+        parser = HhrParser
+        print(len(match_dict))
+        overlap_filtered = self.filter_overlaps(match_dict)
+        print(len(overlap_filtered))
+
+        parser.write_matches_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/', overlap_filtered)
+
     # Takes the matches dictionary and filters chains out if they are identical
     # Sequences provides via download directory
     @staticmethod
@@ -83,6 +150,8 @@ class PreprocessorConv:
 
         unique_chains_dict = {}
         final_records = []
+
+        skipped = 0
 
         # For all fasta files in directory
         for filename in os.listdir(download_dir):
@@ -110,6 +179,7 @@ class PreprocessorConv:
                                 unique_chains.append(chain_id)
                                 final_records.append(record)
                             else:
+                                skipped += 1
                                 continue
 
                 unique_chains_dict[pdb_id] = unique_chains
@@ -127,7 +197,43 @@ class PreprocessorConv:
                     del matches_dict[pdb_id]
                     continue
 
-        return final_records
+        print('SKIPPED ', skipped, 'SEQUENCES BECAUSE OF IDENTICAL CHAINS')
+        print('FINAL RECORDS ', len(final_records))
+
+        sum_records = 0
+        for key in matches_dict:
+            sum_records += len(matches_dict[key])
+
+        print('MATCHES DICT ENTRIES ', sum_records)
+
+        return final_records, matches_dict
+
+    @staticmethod
+    def filter_chains_new(directory):
+
+        seen_seq = []
+
+        for file in os.listdir(directory):
+
+            record = list(SeqIO.parse(directory + file, 'fasta'))
+
+            if record[0].seq not in seen_seq:
+                seen_seq.append(record[0].seq)
+            else:
+                print(record[0].id)
+                subprocess.run(['rm', directory + file])
+
+    @staticmethod
+    def length_filter_new(directory):
+
+        for file in os.listdir(directory):
+
+            record = list(SeqIO.parse(directory + file, 'fasta'))
+
+            if len(record[0].seq) > 750:
+                subprocess.run(['rm', directory + file])
+            elif len(record[0].seq) < 34:
+                subprocess.run(['rm', directory + file])
 
     @staticmethod
     def length_filter(chain_filtered, padded_length, matches_dict):
@@ -155,6 +261,15 @@ class PreprocessorConv:
                 length_filtered.append(record)
 
         return length_filtered
+
+    def aa_filter_new(self, directory):
+
+        for file in os.listdir(directory):
+
+            record = list(SeqIO.parse(directory + file, 'fasta'))
+
+            if not self.unknown_aa_filter(record[0].seq):
+                subprocess.run(['rm', directory + file])
 
     def aa_filter(self, length_filtered, matches_dict):
 
@@ -194,6 +309,8 @@ class PreprocessorConv:
                 all_starts.append(int(entry['tpr_start']))
 
             all_starts.sort()
+            print(pdb_id)
+            print('ALL', all_starts)
 
             to_delete = []
             for i in range(0, len(all_starts)):
@@ -205,9 +322,12 @@ class PreprocessorConv:
 
             all_starts = []
 
+            print('DEL', to_delete)
+
             for index, entry in enumerate(matches_dict[pdb_id]):
 
                 if int(entry['tpr_start']) in to_delete:
+                    print('DELETED', matches_dict[pdb_id][index])
                     del matches_dict[pdb_id][index]
 
         return matches_dict
@@ -234,7 +354,16 @@ class PreprocessorConv:
                             str(key) + '&compressionType=uncompressed'])
 
     @staticmethod
-    def single_chains_fasta(final_records, output_directory):
+    def single_chains_fasta(download_directory, output_directory):
+
+        final_records = []
+
+        for file in os.listdir(download_directory):
+
+            records = list(SeqIO.parse(download_directory + file, 'fasta'))
+
+            for rec in records:
+                final_records.append(rec)
 
         for record in final_records:
 
