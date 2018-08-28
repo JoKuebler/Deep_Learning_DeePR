@@ -14,20 +14,31 @@ class ConvolutionalNetwork:
 
         # Define input layer
         self.input_layer = Conv1D(64, 3, padding='same', kernel_regularizer=l2(0.01), input_shape=(34, 20))
+        input_one = Input(shape=(34, 20), name='inp')
 
         # Define optimizer
         self.optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
 
         # Define model including layers and activation functions
-        self.model = Sequential([
-            self.input_layer,
-            Conv1D(64, 5, padding='same', kernel_regularizer=l2(0.01)),
-            Conv1D(64, 7, padding='same', kernel_regularizer=l2(0.01)),
-            Conv1D(64, 9, padding='same', kernel_regularizer=l2(0.01)),
-            Conv1D(64, 11, padding='same', kernel_regularizer=l2(0.01)),
-            GlobalMaxPooling1D(),
-            Dense(2, activation='softmax', name='output_layer')
-        ])
+        a = Conv1D(64, 3, activation='sigmoid', padding='same', kernel_regularizer=l2(0.0001))(input_one)
+        a_b = BatchNormalization()(a)
+        b = Conv1D(64, 5, activation='sigmoid', padding='same', kernel_regularizer=l2(0.0001))(input_one)
+        b_b = BatchNormalization()(b)
+        c = Conv1D(64, 7, activation='sigmoid', padding='same', kernel_regularizer=l2(0.0001))(input_one)
+        c_b = BatchNormalization()(c)
+        d = Conv1D(64, 9, activation='sigmoid', padding='same', kernel_regularizer=l2(0.0001))(input_one)
+        d_b = BatchNormalization()(d)
+        e = Conv1D(64, 9, activation='sigmoid', padding='same', kernel_regularizer=l2(0.0001))(input_one)
+        e_b = BatchNormalization()(e)
+        x = concatenate([a_b, b_b, c_b, d_b, e_b], axis=-1)
+
+        t = Dense(180, activation='relu', kernel_regularizer=l2(0.0001))(x)
+
+        glob = GlobalMaxPooling1D()(t)
+
+        out = Dense(2, activation='softmax', name='output_layer')(glob)
+
+        self.model = Model(inputs=input_one, outputs=out)
 
         self.encoder = Encoder()
 
@@ -41,7 +52,7 @@ class ConvolutionalNetwork:
         """
 
         # Model needs to be compiled before training
-        self.model.compile(loss='binary_crossentropy', optimizer=self.optimizer, metrics=['accuracy'])
+        self.model.compile(loss='categorical_crossentropy', optimizer=self.optimizer, metrics=['accuracy'])
         # Overview over model
         self.model.summary()
 
