@@ -13,6 +13,7 @@ if __name__ == '__main__':
     parser.add_argument("-r", "--retrain", help="Retrain and store model")
     parser.add_argument("-l", "--load", help="Load model")
     parser.add_argument("-i", "--input", help="File to predict")
+    parser.add_argument("-d", "--input_dir", help="Input directory to predict multiple files")
 
     args = parser.parse_args()
 
@@ -43,6 +44,14 @@ if __name__ == '__main__':
         # Store model in given directory
         conv_net.save_model(args.retrain)
 
+        # Read in protein and cut into windows
+        pred_data, seq_id, chain_id = file_read.read_pred_data(args.input, 34, 1)
+
+        # Encode input
+        enc_pred, target = encoder.encode(pred_data)
+
+        conv_net.predict(pred_data, enc_pred)
+
     else:
 
         # Load model from given directory
@@ -53,7 +62,7 @@ if __name__ == '__main__':
         seq_id_to_map = []
 
         # Predict sequences to get prob profiles for refine network training
-        for file in os.listdir(args.input):
+        for file in os.listdir(args.input_dir):
             # Read in protein and cut into windows
             pred_data, seq_id, chain_id = file_read.read_pred_data(args.input + file, 34, 1)
 

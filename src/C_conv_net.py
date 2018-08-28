@@ -1,9 +1,10 @@
-from keras.layers import Conv1D, GlobalMaxPooling1D
+from keras.layers import Conv1D, GlobalMaxPooling1D, Input, BatchNormalization, merge, TimeDistributed, LSTM, Bidirectional
 from keras.layers.core import Dense
 from keras.models import Sequential
 from keras.optimizers import Adam
 from keras.regularizers import l2
-from keras.models import model_from_json
+from keras.models import model_from_json, Model
+from keras.layers.merge import concatenate
 from src.B_encoding import Encoder
 
 
@@ -45,14 +46,14 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        self.model.fit(data, target, validation_split=0.1, batch_size=100, epochs=75, shuffle=True, verbose=2)
+        self.model.fit(data, target, validation_split=0.1, batch_size=100, epochs=50, shuffle=True, verbose=2)
 
         # Evaluate model and print results
         scores = self.model.evaluate(test_data, test_target)
         print("\n%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
         print('[ERROR,ACCURACY]', scores)
 
-    def predict(self, seqs, enc_seq, seq_id, chain_id):
+    def predict(self, seqs, enc_seq, seq_id=None, chain_id=None):
         """
         Predict encoded sequences
         :param seqs: Raw sequences for output later
@@ -69,12 +70,14 @@ class ConvolutionalNetwork:
         predictions = self.model.predict(enc_seq, batch_size=20, verbose=2)
 
         # show the inputs and predicted outputs
-        # for i in range(len(seqs)):
-            # print(i+1, seqs[i], predictions[i])
-            # print(predictions[i][0])
+        for i in range(len(seqs)):
+            print(i+1, seqs[i], predictions[i])
 
-        # for each prediction made by the CNN pass the data to encode it for the refinement network
-        padded_refine_data, target_vector = self.encoder.create_refine_data(predictions, seq_id, chain_id)
+        if seq_id is not None:
+            # for each prediction made by the CNN pass the data to encode it for the refinement network
+            padded_refine_data, target_vector = self.encoder.create_refine_data(predictions, seq_id, chain_id)
+        else:
+            padded_refine_data, target_vector = [], []
 
         return predictions, padded_refine_data, target_vector
 
