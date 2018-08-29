@@ -1,10 +1,9 @@
-from keras.layers import Conv1D, GlobalMaxPooling1D, Input, BatchNormalization, merge, TimeDistributed, LSTM, Bidirectional
+from keras.layers import Conv1D, GlobalMaxPooling1D
 from keras.layers.core import Dense
 from keras.models import Sequential
 from keras.optimizers import Adam
 from keras.regularizers import l2
-from keras.models import model_from_json, Model
-from keras.layers.merge import concatenate
+from keras.models import model_from_json
 from src.B_encoding import Encoder
 
 
@@ -64,6 +63,7 @@ class ConvolutionalNetwork:
         """
 
         # Print how many sequences are predicted (windows)
+        print(seq_id)
         print(str(len(seqs)) + ' Sequences predicted')
 
         # Make predictions

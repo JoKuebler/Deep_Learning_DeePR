@@ -64,7 +64,7 @@ if __name__ == '__main__':
         # Predict sequences to get prob profiles for refine network training
         for file in os.listdir(args.input_dir):
             # Read in protein and cut into windows
-            pred_data, seq_id, chain_id = file_read.read_pred_data(args.input + file, 34, 1)
+            pred_data, seq_id, chain_id = file_read.read_pred_data(args.input_dir + file, 34, 1)
 
             # Encode input
             enc_pred, target = encoder.encode(pred_data)
@@ -75,6 +75,9 @@ if __name__ == '__main__':
             refine_training.append(refine_data)
             refine_training_labels.append(refine_target)
             seq_id_to_map.append(seq_id + ' ' + chain_id)
+
+        print(np.asarray(refine_training).shape)
+        print(np.asarray(refine_training_labels).shape)
 
         # This takes the data of the CNN predictions and trains next network
         ref_net.train_predict(np.asarray(refine_training), np.asarray(refine_training_labels), seq_id_to_map)

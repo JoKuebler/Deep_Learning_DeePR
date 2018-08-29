@@ -1,7 +1,8 @@
-from keras.layers import Dropout, Flatten
+from keras.layers import Dropout, Flatten, Conv1D
 from keras.layers.core import Dense
 from keras.models import Sequential
 from keras.optimizers import Adam, SGD
+from keras.regularizers import l2
 from keras.models import model_from_json
 import numpy as np
 
@@ -11,7 +12,7 @@ class RefinementNetwork:
     def __init__(self):
 
         # Define input layer
-        self.input_layer = Dense(128, input_shape=(717,), activation='relu')
+        self.input_layer = Conv1D(64, 3, padding='same', kernel_regularizer=l2(0.01), input_shape=(717, 2))
 
         # Define optimizer
         self.optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
@@ -20,15 +21,13 @@ class RefinementNetwork:
         # Define model including layers and activation functions
         self.model = Sequential([
             self.input_layer,
-            Dropout(0.2),
-            Dense(128),
-            Dropout(0.2),
-            Dense(128),
-            Dense(64),
-            Dropout(0.2),
+            Conv1D(64, 5, padding='same', kernel_regularizer=l2(0.01)),
+            Conv1D(64, 7, padding='same', kernel_regularizer=l2(0.01)),
+            Conv1D(64, 9, padding='same', kernel_regularizer=l2(0.01)),
+            Conv1D(64, 11, padding='same', kernel_regularizer=l2(0.01)),
             Dense(64),
             Dense(28),
-            Dense(717, activation='softmax')
+            Dense(2, activation='softmax')
         ])
 
     def train_network(self, data, target, test_data=None, test_target=None):
@@ -64,12 +63,18 @@ class RefinementNetwork:
         # Make predictions
         predictions = self.model.predict(cnn_probs, verbose=2)
 
+        # Make results more readable
         for i in range(len(predictions)):
             print(seq_id_to_map[i])
-            print(predictions[i])
             print('SUM ', sum(predictions[i]))
-            max_value = max(predictions[i])
-            print('MAX ', max_value)
+            print(predictions[i])
+            for x in range(len(predictions[i])):
+                print(predictions[i][x])
+            # max_value = max(predictions[i])
+            # print('MAX ', max_value)
+            # for x in range(len(predictions[i])):
+            #     if predictions[i][x] > 0.07:
+            #         print(list(predictions[i]).index(predictions[i][x]))
 
         return predictions
 
@@ -87,12 +92,7 @@ class RefinementNetwork:
         self.model.save_weights(directory + 'model.h5')
         print('Model Saved to Disk!')
 
-
     def train_predict(self, conv_predictions, conv_labels, seq_id_to_map):
-
-        for i in range(820):
-            print(conv_predictions[i])
-            print(conv_labels[i])
 
         self.train_network(conv_predictions[:820], conv_labels[:820])
 

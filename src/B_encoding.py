@@ -84,18 +84,35 @@ class Encoder:
 
     def create_refine_data(self, predictions, seq_id, chain_id):
 
-        data = np.array([x[0] for x in predictions])
+        data1 = np.array([x[0] for x in predictions])
+        data2 = np.array([(1 - x[0]) for x in predictions])
 
-        padded_data = np.pad(data, (0, 717-len(data)), 'constant', constant_values=(0, 0))
+        data = []
 
-        target_vector = np.zeros(717)
+        for i in range(len(data1)):
+            current = [data1[i], data2[i]]
+            data.append(current)
+
+        while len(data) < 717:
+            data.append([0, 1])
+
+        # padded_data = np.pad(data, (0, 717-len(data)), 'constant', constant_values=(0, 0))
+
+        padded_data = data
+
+        target_vector = (717, 2)
+        target_vector = np.zeros(target_vector)
 
         for entry in self.tpr_info[seq_id]:
             if entry["chain"] == chain_id:
-                target_vector[int(entry["tpr_start"])-1] = 1
+                for i in range(len(target_vector)):
+                    if i == int(entry["tpr_start"])-1:
+                        target_vector[i] = [1, 0]
+                    else:
+                        target_vector[i] = [0, 1]
 
-        if all([v == 0 for v in target_vector]):
-            print(seq_id, ' LEADS TO A ZERO TARGET VECTOR')
+        # if all([v == 0 for v in target_vector]):
+        #     print(seq_id, ' LEADS TO A ZERO TARGET VECTOR')
 
         return padded_data, target_vector
 
