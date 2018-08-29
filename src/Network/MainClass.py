@@ -35,7 +35,7 @@ if __name__ == '__main__':
     # Training_data = main_runner_ff.init_training_data(Preprocessor_ff)
     matches_dict = main_runner_conv.get_training_sequences(Preprocessor_conv)
 
-    # main_runner_conv.eval_hhpred_results(matches_dict)
+    main_runner_conv.eval_hhpred_results(matches_dict)
     # Training_data_conv = main_runner_conv.encode_data(Preprocessor_conv, '/ebio/abt1_share/update_tprpred/data'
     #                                                                     '/PDB_Approach/All_at_once/final_fasta/')
     # Training_data_conv = main_runner_conv.encode_as_window(Preprocessor_conv, '/ebio/abt1_share/update_tprpred/data'

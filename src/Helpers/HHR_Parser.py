@@ -8,7 +8,7 @@ class HhrParser:
     def __init__(self, hhr_directory=''):
         self.hhr_directory = hhr_directory
         self.identifier = ['a.7.14', 'a.7.16', 'a.23.4', 'a.24.24', 'a.118.5', 'a.118.7', 'a.118.8',
-                           'a.118.20', 'a.246.2', 'd.157.1', 'e.61.1']
+                           'a.118.20', 'a.246.2', 'd.157.1', 'd_26.1' 'e.61.1']
 
     # keeps only files which are tpr like class in scope
     def filter_files(self, matches_dict):
@@ -71,13 +71,13 @@ class HhrParser:
                             print('Removed', str(filename))
                             subprocess.run(['rm', self.hhr_directory + filename])
 
-                            if pdb_id in matches_dict:
-
-                                for index, entry in enumerate(matches_dict[pdb_id]):
-                                    if entry['chain'] == chain:
-                                        del matches_dict[pdb_id][index]
-                                        if len(matches_dict[pdb_id]) == 0:
-                                            del matches_dict[pdb_id]
+                            # if pdb_id in matches_dict:
+                            #
+                            #     for index, entry in enumerate(matches_dict[pdb_id]):
+                            #         if entry['chain'] == chain:
+                            #             del matches_dict[pdb_id][index]
+                            #             if len(matches_dict[pdb_id]) == 0:
+                            #                 del matches_dict[pdb_id]
 
                     subprocess.run(['rm', self.hhr_directory + 'output.json'])
 
