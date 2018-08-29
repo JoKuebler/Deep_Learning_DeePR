@@ -30,37 +30,32 @@ class Convolutional:
     # Writes proteins into single chains for hhpred
     def get_training_sequences(self, preprocessor_object):
 
+        # PASS MATCH FILE OBTAINED FROM MASTER TO BUILD DICT AND DOWNLOAD FASTAS
+        # -------------------------------------------- #
         # Filter out duplicates in match file
         # matches_dict = preprocessor_object.filter_duplicates(self.match_file, self.rmsd_treshold)
-
         # print('Unique Sequences with matches: ' + str(len(matches_dict)))
-        #
         # Download each Fasta from PDB ID in the match file
         # preprocessor_object.download_fasta(matches_dict, '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/updated_fasta_download/')
+        # ---------------------------------------------#
 
+        # UNCOMMENT ONE OF BOTH BLOCKS SEPARATELY
+
+        # ONCE FASTAS ARE DOWNLOADED SPLIT AND FILTER THEM TO GET FINAL FASTAS
+        # -------------------------------------------- #
         # Write all files to single chains
         # preprocessor_object.single_chains_fasta('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/updated_fasta_download/',
         #                                        '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/update_single_chains/')
-
         # preprocessor_object.filter_chains_new('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/update_single_chains/')
-
         # preprocessor_object.length_filter_new('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/update_single_chains/')
-
         # preprocessor_object.aa_filter_new('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/update_single_chains/')
-
         # matches_dict_new = preprocessor_object.build_matches_dict(self.match_file, '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/update_single_chains/')
-
         matches_dict_new = HhrParser.read_matches_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_dict.json')
+        # filter_overlap = preprocessor_object.filter_overlaps(matches_dict_new)
+        # HhrParser.write_matches_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/', filter_overlap)
+        # -------------------------------------------- #
 
-        filter_overlap = preprocessor_object.filter_overlaps(matches_dict_new)
-
-        HhrParser.write_matches_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/', filter_overlap)
-
-        # overlap_filtered_dict = preprocessor_object.filter_overlaps(matches_dict)
-        #
-        # print(len(overlap_filtered_dict))
-        #
-        # return overlap_filtered_dict
+        return matches_dict_new
 
     # Takes matches dict and looks at hhr files produced by hhpred
     @staticmethod

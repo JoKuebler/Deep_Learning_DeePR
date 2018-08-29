@@ -321,14 +321,21 @@ class PreprocessorConv:
                         all_starts.remove(all_starts[i + 1])
 
             all_starts = []
+            index_list = []
+            entries = matches_dict[pdb_id]
 
             print('DEL', to_delete)
 
-            for index, entry in enumerate(matches_dict[pdb_id]):
-
+            # Gets index of entries to delete
+            for entry in matches_dict[pdb_id]:
                 if int(entry['tpr_start']) in to_delete:
-                    print('DELETED', matches_dict[pdb_id][index])
-                    del matches_dict[pdb_id][index]
+                    index_list.append(matches_dict[pdb_id].index(entry))
+
+            # Assign entries which are not deleted to new list
+            new_entries = [entry for entry in entries if matches_dict[pdb_id].index(entry) not in index_list]
+
+            # Update entries for PDB ID
+            matches_dict[pdb_id] = new_entries
 
         return matches_dict
 
