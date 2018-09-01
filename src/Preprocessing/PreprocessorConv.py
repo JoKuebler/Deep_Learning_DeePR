@@ -136,12 +136,7 @@ class PreprocessorConv:
 
             open_file.seek(0)
 
-        parser = HhrParser
-        print(len(match_dict))
-        overlap_filtered = self.filter_overlaps(match_dict)
-        print(len(overlap_filtered))
-
-        parser.write_matches_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/', overlap_filtered)
+        return match_dict
 
     # Takes the matches dictionary and filters chains out if they are identical
     # Sequences provides via download directory

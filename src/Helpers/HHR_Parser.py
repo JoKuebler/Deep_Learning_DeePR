@@ -14,7 +14,6 @@ class HhrParser:
     def filter_files(self, matches_dict):
 
         counter = 0
-
         print(len(matches_dict))
 
         # For all hhr files in directory
@@ -93,7 +92,7 @@ class HhrParser:
     def write_matches_json(directory, match_dict):
 
         # store hhr in json file in the directory
-        output_file = open(directory + 'match_dict.json', 'w+')
+        output_file = open(directory + 'match_dict_merged.json', 'w+')
 
         output_file.write(str(match_dict).replace('\'', '"'))
 
@@ -130,7 +129,7 @@ class HhrParser:
 
                             # copy to final directory
                             subprocess.run(['cp', directory + fasta_file,
-                                            '/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/final_fasta/'])
+                                            '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/final_fasta/'])
 
         return fasta_seen
 
@@ -145,11 +144,10 @@ class HhrParser:
 
 if __name__ == '__main__':
 
-    parser = HhrParser('/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/all_hhr/')
+    parser = HhrParser('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/hhr_results_filtered/')
 
-    parser.get_fasta_from_hhr(['/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/single_chains_all/'])
+    parser.get_fasta_from_hhr(['/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/done/'])
 
-    matches_dict = parser.read_matches_json('/ebio/abt1_share/update_tprpred/data'
-                                            '/PDB_Approach/All_at_once/tpr_info.json')
+    matches_dict = parser.read_matches_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/final_fasta_sets_combined/match_dict_merged.json')
 
-    parser.proof(matches_dict, '/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/final_fasta/')
+    parser.proof(matches_dict, '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/final_fasta_sets_combined/')

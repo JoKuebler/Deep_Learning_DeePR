@@ -10,7 +10,7 @@ class Convolutional:
     def __init__(self):
 
         # Match search result .match file
-        self.match_file = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/results/updated/total.match'
+        self.match_file = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_files/updated_second/total.match'
         self.total_matches = '/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/total_matches.match'
         self.rmsd_treshold = 2.5
         self.padded_length = 750
@@ -36,7 +36,7 @@ class Convolutional:
         # matches_dict = preprocessor_object.filter_duplicates(self.match_file, self.rmsd_treshold)
         # print('Unique Sequences with matches: ' + str(len(matches_dict)))
         # Download each Fasta from PDB ID in the match file
-        # preprocessor_object.download_fasta(matches_dict, '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/updated_fasta_download/')
+        # preprocessor_object.download_fasta(matches_dict, '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_fasta/')
         # ---------------------------------------------#
 
         # UNCOMMENT ONE OF BOTH BLOCKS SEPARATELY
@@ -44,15 +44,16 @@ class Convolutional:
         # ONCE FASTAS ARE DOWNLOADED SPLIT AND FILTER THEM TO GET FINAL FASTAS
         # -------------------------------------------- #
         # Write all files to single chains
-        # preprocessor_object.single_chains_fasta('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/updated_fasta_download/',
-        #                                        '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/update_single_chains/')
-        # preprocessor_object.filter_chains_new('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/update_single_chains/')
-        # preprocessor_object.length_filter_new('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/update_single_chains/')
-        # preprocessor_object.aa_filter_new('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/update_single_chains/')
-        # matches_dict_new = preprocessor_object.build_matches_dict(self.match_file, '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/update_single_chains/')
-        matches_dict_new = HhrParser.read_matches_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_dict.json')
-        # filter_overlap = preprocessor_object.filter_overlaps(matches_dict_new)
-        # HhrParser.write_matches_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/', filter_overlap)
+        # preprocessor_object.single_chains_fasta('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_fasta/',
+        #                                         '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/')
+        # preprocessor_object.filter_chains_new('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/')
+        # preprocessor_object.length_filter_new('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/')
+        # preprocessor_object.aa_filter_new('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/')
+        # matches_dict_new = preprocessor_object.build_matches_dict(self.match_file, '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/done/')
+
+        matches_dict_new = HhrParser.read_matches_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/final_fasta_sets_combined/merged.json')
+        filter_overlap = preprocessor_object.filter_overlaps(matches_dict_new)
+        HhrParser.write_matches_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/', filter_overlap)
         # -------------------------------------------- #
 
         return matches_dict_new
@@ -63,7 +64,7 @@ class Convolutional:
 
         # Filter out sequences which were not a hit in a TPR related scope class when run with hhpred
         # Filter out sequences where hit is not in template range of hhpred hit
-        hhr_parser = HhrParser('/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/all_hhr/')
+        hhr_parser = HhrParser('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/hhr_results/')
         # returns directory where remaining sequences are stored
         hhr_parser.filter_files(matches_dict)
 
