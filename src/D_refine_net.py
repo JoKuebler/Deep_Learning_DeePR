@@ -1,4 +1,4 @@
-from keras.layers import Dropout, Flatten, Conv1D
+from keras.layers import Dropout, Flatten, Conv1D, LSTM
 from keras.layers.core import Dense
 from keras.models import Sequential
 from keras.optimizers import Adam, SGD

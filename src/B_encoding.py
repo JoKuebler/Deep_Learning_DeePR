@@ -13,7 +13,7 @@ class Encoder:
         self.unknown_aa = ['X', 'x', 'B', 'b', 'Z', 'z', 'U', 'u']
 
         # TPR JSON which stores information about all training sequences
-        self.tpr_info = self.read_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/tpr_info.json')
+        self.tpr_info = self.read_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/MASTER_sets/first_set/tpr_info.json')
 
     def encode(self, pos_data, neg_data=None):
         """

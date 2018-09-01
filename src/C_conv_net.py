@@ -12,7 +12,7 @@ class ConvolutionalNetwork:
     def __init__(self):
 
         # Define input layer
-        self.input_layer = Conv1D(64, 3, padding='same', kernel_regularizer=l2(0.01), input_shape=(34, 20))
+        self.input_layer = Conv1D(96, 9, padding='valid', kernel_regularizer=l2(0.01), input_shape=(34, 20))
 
         # Define optimizer
         self.optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
@@ -20,10 +20,10 @@ class ConvolutionalNetwork:
         # Define model including layers and activation functions
         self.model = Sequential([
             self.input_layer,
-            Conv1D(64, 5, padding='same', kernel_regularizer=l2(0.01)),
-            Conv1D(64, 7, padding='same', kernel_regularizer=l2(0.01)),
-            Conv1D(64, 9, padding='same', kernel_regularizer=l2(0.01)),
-            Conv1D(64, 11, padding='same', kernel_regularizer=l2(0.01)),
+            Conv1D(128, 9, padding='valid', kernel_regularizer=l2(0.01)),
+            Conv1D(256, 9, padding='valid', kernel_regularizer=l2(0.01)),
+            Conv1D(512, 8, padding='valid', kernel_regularizer=l2(0.01)),
+            Conv1D(144, 1, padding='valid', kernel_regularizer=l2(0.01)),
             GlobalMaxPooling1D(),
             Dense(2, activation='softmax', name='output_layer')
         ])
@@ -45,7 +45,7 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        self.model.fit(data, target, validation_split=0.1, batch_size=100, epochs=50, shuffle=True, verbose=2)
+        self.model.fit(data, target, validation_split=0.1, batch_size=100, epochs=25, shuffle=True, verbose=2)
 
         # Evaluate model and print results
         scores = self.model.evaluate(test_data, test_target)
