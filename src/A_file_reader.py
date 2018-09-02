@@ -1,4 +1,5 @@
 from Bio import SeqIO
+import os
 
 
 class FileReader:
@@ -55,6 +56,35 @@ class FileReader:
                 fragments.append(current_fragment)
 
             return fragments, seq_id, chain_id
+
+    @staticmethod
+    def pdb_pos_mapper(map_file_dir, match_dict):
+        """
+        Maps position in MASTER match files to real positions in PDB files
+        :param map_file_dir: directory containing each master match
+        :param match_dict: dictionary with old/wrong positions to be replaced
+        :return: new dictionary
+        """
+
+        for file in os.listdir(map_file_dir):
+
+            with open(map_file_dir + file) as content:
+                head = [next(content) for x in range(2)]
+
+                line1, line2 = head[0], head[1]
+
+                one_list, two_list = line1.split(), line2.split()
+                print(one_list)
+                print(two_list)
+
+                fake_pos = int(one_list[-1].split(',')[0].replace('[', '').replace('(', ''))
+                true_pos = two_list[5]
+
+
+if __name__ == '__main__':
+
+    reader = FileReader()
+    reader.pdb_pos_mapper('/tmp/jonas/run/results/all_matches/', '/tmp/jonas/run/results/match_dict_merged.json')
 
 
 
