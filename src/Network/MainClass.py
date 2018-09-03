@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # Training_data_conv = main_runner_conv.encode_data(Preprocessor_conv, '/ebio/abt1_share/update_tprpred/data'
     #                                                                     '/PDB_Approach/All_at_once/final_fasta/')
     Training_data_conv = main_runner_conv.encode_as_window(Preprocessor_conv, '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/final_fasta_sets_combined/',
-                                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/updated.json')
+                                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/updated_old_pos.json')
 
     # Training_data_conv = main_runner_ff.init_training_data(Preprocessor_ff)
 
