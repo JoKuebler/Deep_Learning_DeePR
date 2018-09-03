@@ -113,19 +113,20 @@ class Convolutional:
                 # Same chain
                 if entry['chain'] == chain_id:
 
-                    fragment = record.seq[int(entry['tpr_start']):int(entry['tpr_end']) - 1]
+                    fragment = record.seq[int(entry['tpr_start']) - 1:int(entry['tpr_end']) - 1]
 
                     # If too small take the old position
-                    if len(fragment) < 33:
+                    if len(fragment) < 34:
 
                         # If there is no old pos it is a relikt in the dict and can be ignored
                         if 'tpr_old' in entry:
 
                             # Take old pos
-                            fragment = record.seq[int(entry['tpr_old']):int(entry['tpr_old']) + 33]
+                            fragment = record.seq[int(entry['tpr_old']) - 1:int(entry['tpr_old']) + 33]
 
                             # Still to small ignore
-                            if len(fragment) < 33:
+                            if len(fragment) < 34:
+                                print(pdb_id)
                                 continue
                             else:
                                 new_file.write(str(fragment) + '\n')
