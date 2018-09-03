@@ -6,9 +6,12 @@ class Encoder:
 
     def __init__(self):
 
-        # Positive training set
         self.amino_acids = ['R', 'H', 'K', 'D', 'E', 'S', 'T', 'N', 'Q', 'C',
                             'G', 'P', 'A', 'V', 'I', 'L', 'M', 'F', 'Y', 'W']
+        self.side_chain_volume = self.normalize_values([105.0, 79.0, 100.0, 40.0, 62.0, 29.3, 51.3, 58.7, 80.7, 44.6,
+                                                        0.0, 41.9, 27.5, 71.5, 93.5, 93.5, 94.1, 115.5, 117.3, 145.5])
+        self.hydrophobicity = self.normalize_values([0.60, 0.61, 1.15, 0.46, 0.47, 0.05, 0.05, 0.06, 0.0, 1.07,
+                                                     0.07, 1.95, 0.61, 1.32, 2.22, 1.53, 1.18, 2.02, 1.88, 2.65])
 
         self.unknown_aa = ['X', 'x', 'B', 'b', 'Z', 'z', 'U', 'u']
 
@@ -52,6 +55,8 @@ class Encoder:
 
             # find index in amino acid array and set char at index to 1
             current_vector[self.amino_acids.index(aminoAcid.upper())] = 1.0
+            # current_vector[len(zero_vector) - 1] = self.side_chain_volume[self.amino_acids.index(aminoAcid.upper())]
+            # current_vector[len(zero_vector) - 2] = self.hydrophobicity[self.amino_acids.index(aminoAcid.upper())]
 
             # append to vector for whole fragment
             fragment_vector.append(np.array(current_vector))
@@ -123,4 +128,13 @@ class Encoder:
             data = json.load(file)
 
         return data
+
+    @staticmethod
+    def normalize_values(array_to_norm):
+
+        max_val, min_val = max(array_to_norm), min(array_to_norm)
+
+        array_normed = [(elem - min_val)/(max_val-min_val) for elem in array_to_norm]
+
+        return array_normed
 

@@ -45,7 +45,7 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        self.model.fit(data, target, validation_split=0.1, batch_size=100, epochs=25, shuffle=True, verbose=2)
+        self.model.fit(data, target, batch_size=100, epochs=75, shuffle=True, verbose=2)
 
         # Evaluate model and print results
         scores = self.model.evaluate(test_data, test_target)

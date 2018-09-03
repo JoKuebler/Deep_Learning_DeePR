@@ -44,8 +44,10 @@ if __name__ == '__main__':
         # Store model in given directory
         conv_net.save_model(args.retrain)
 
+        # conv_net.load_model(args.retrain)
+
         # Read in protein and cut into windows
-        pred_data, seq_id, chain_id = file_read.read_pred_data(args.input, 34, 1)
+        pred_data, seq_id = file_read.read_pred_data(args.input, 34, 1)
 
         # Encode input
         enc_pred, target = encoder.encode(pred_data)
