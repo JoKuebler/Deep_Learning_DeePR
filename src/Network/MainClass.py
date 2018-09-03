@@ -33,14 +33,13 @@ if __name__ == '__main__':
     # --------------- Training ----------------------
     # Initialize objects when training model
     # Training_data = main_runner_ff.init_training_data(Preprocessor_ff)
-    matches_dict = main_runner_conv.get_training_sequences(Preprocessor_conv)
+    # matches_dict = main_runner_conv.get_training_sequences(Preprocessor_conv)
 
-    main_runner_conv.eval_hhpred_results(matches_dict)
+    # main_runner_conv.eval_hhpred_results(matches_dict)
     # Training_data_conv = main_runner_conv.encode_data(Preprocessor_conv, '/ebio/abt1_share/update_tprpred/data'
     #                                                                     '/PDB_Approach/All_at_once/final_fasta/')
-    # Training_data_conv = main_runner_conv.encode_as_window(Preprocessor_conv, '/ebio/abt1_share/update_tprpred/data'
-    #                                                                            '/PDB_Approach/All_at_once/final_fasta/',
-    #                                                                            '/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/tpr_info.json')
+    Training_data_conv = main_runner_conv.encode_as_window(Preprocessor_conv, '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/final_fasta_sets_combined/',
+                                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/updated.json')
 
     # Training_data_conv = main_runner_ff.init_training_data(Preprocessor_ff)
 

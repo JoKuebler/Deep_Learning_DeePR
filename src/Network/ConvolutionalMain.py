@@ -97,7 +97,7 @@ class Convolutional:
         # this returns sequences as list of raw strings and as list of biopython records
         sequences = preprocessor_object.read_final_sequences(final_sequences_dir)
 
-        new_file = open('/ebio/abt1_share/update_tprpred/data/PDB_Approach/All_at_once/positive_data' + '.txt', 'w')
+        new_file = open('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/second_update_single_chains/positive_data_updated' + '.txt', 'w')
 
         hhr_parser = HhrParser()
         matches_json = hhr_parser.read_matches_json(matches_dict)
@@ -111,12 +111,13 @@ class Convolutional:
             for entry in matches_json[pdb_id]:
 
                 if entry['chain'] == chain_id:
-                    fragment = record.seq[int(entry['tpr_start']):int(entry['tpr_end'])+1]
+                    fragment = record.seq[int(entry['tpr_start'])-1:int(entry['tpr_end'])]
                     if len(fragment) < 33:
-                        print(pdb_id)
-                        print(entry)
+                        print('PDB_ID', pdb_id)
+                        print('ENTRY', entry)
+                        print(fragment)
                     else:
-                        new_file.write(str(record.seq[int(entry['tpr_start']):int(entry['tpr_end'])+1]) + '\n')
+                        new_file.write(str(fragment) + '\n')
 
         new_file.close()
 
