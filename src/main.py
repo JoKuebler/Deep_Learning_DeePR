@@ -2,29 +2,29 @@ from src.A_file_reader import FileReader
 from src.B_encoding import Encoder
 from src.C_conv_net import ConvolutionalNetwork
 from src.D_refine_net import RefinementNetwork
+from src.DataPreprocessing.A_query_aligner import Aligner
 import argparse
 import numpy as np
 import os
 
-if __name__ == '__main__':
 
-    # initiate the parser
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--retrain", help="Retrain and store model")
-    parser.add_argument("-l", "--load", help="Load model")
-    parser.add_argument("-i", "--input", help="File to predict")
-    parser.add_argument("-d", "--input_dir", help="Input directory to predict multiple files")
+def preprocess(align_object):
+    """
+    Runs several preprocessing steps
+    and makes it easy to comment out if not needed
+    :param align_object:
+    :return:
+    """
 
-    args = parser.parse_args()
+    align_object.pairwise_align()
 
-    # Init FileReader object for Training Data
-    file_read = FileReader()
-    # Init convolutional network
-    conv_net = ConvolutionalNetwork()
-    # Init Refinement network
-    ref_net = RefinementNetwork()
-    # Init Encoder object
-    encoder = Encoder()
+
+def network_training(reader_object, encoder_object, conv_object, ref_object):
+    """
+    Trains the network and evaluates parameters
+    :param conv_object:
+    :return:
+    """
 
     # When retrain parameter is set to True
     if args.retrain:
@@ -83,4 +83,39 @@ if __name__ == '__main__':
 
         # This takes the data of the CNN predictions and trains next network
         ref_net.train_predict(np.asarray(refine_training), np.asarray(refine_training_labels), seq_id_to_map)
+
+
+if __name__ == '__main__':
+
+    # initiate the parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-r", "--retrain", help="Retrain and store model")
+    parser.add_argument("-l", "--load", help="Load model")
+    parser.add_argument("-i", "--input", help="File to predict")
+    parser.add_argument("-d", "--input_dir", help="Input directory to predict multiple files")
+
+    args = parser.parse_args()
+
+    # Preprocessing
+    aligner = Aligner('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/queries/third_set/')
+
+    # Network
+    # Init FileReader object for Training Data
+    file_read = FileReader()
+    # Init Encoder object
+    encoder = Encoder()
+    # Init convolutional network
+    conv_net = ConvolutionalNetwork()
+    # Init Refinement network
+    ref_net = RefinementNetwork()
+
+    # Running
+    # Preprocess Data
+    preprocess(aligner)
+
+    # Train Network
+    network_training(file_read, encoder, conv_net, ref_net)
+
+
+
 
