@@ -3,7 +3,7 @@ from src.B_encoding import Encoder
 from src.C_conv_net import ConvolutionalNetwork
 from src.D_refine_net import RefinementNetwork
 from src.DataPreprocessing.A_query_aligner import Aligner
-from src.DataPreprocessing.B_match_file_parser import MatchParser
+from src.DataPreprocessing.B_file_parser import MatchParser
 import argparse
 import numpy as np
 import os
@@ -20,6 +20,10 @@ def preprocess(align_object, matcher_object):
     # align_object.pairwise_align()
 
     matcher_object.parse_info()
+
+    # matcher_object.tprpred_pvalues('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_files/third_set/match_dict_beauty.json')
+
+    # matcher_object.tprpred_plot('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/tprpred_res.fa')
 
 
 def network_training(reader_object, encoder_object, conv_object, ref_object):

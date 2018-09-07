@@ -1,7 +1,11 @@
 import os
 import re
-from Bio import SeqIO
 import warnings
+import json
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from Bio import SeqIO
 from Bio import BiopythonWarning
 warnings.simplefilter('ignore', BiopythonWarning)
 
@@ -73,7 +77,7 @@ class MatchParser:
                     match_seqs.append(str(seq))
 
                     # Build match dictionary
-                    match_entry = [{"rmsd": rmsd, "chain": chain_id, "tpr_start": start_pos, "seq": str(seq)}]
+                    match_entry = [{"rmsd": rmsd, "chain": chain_id, "tpr_start": start_pos, "seq": str(seq), "query": pdb_id}]
                     # dictionary fill
                     if pdb_id_match in match_dict:
                         match_dict[pdb_id_match].append(match_entry[0])
@@ -107,8 +111,51 @@ class MatchParser:
         """
 
         # store hhr in json file in the directory
-        output_file = open(directory + 'match_dict.json', 'w+')
+        output_file = open(directory + 'match_dict_queryID.json', 'w+')
 
         output_file.write(str(match_dict).replace('\'', '"'))
 
         output_file.close()
+
+    @staticmethod
+    def write_to_fasta(match_json):
+        """
+        Write each sequence in the match json into fasta format in one fasta file
+        Important e.g TPRpred
+        :param match_json: dictionary containing hits
+        :return:
+        """
+
+        with open(match_json) as file:
+            data = json.load(file)
+
+        output_file = open('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/fasta.fa', 'w+')
+
+        for key in data:
+            for entry in data[key]:
+
+                header = str(">" + key + entry["chain"] + '\n')
+
+                output_file.write(header)
+                output_file.write(entry["seq"] + '\n')
+
+        output_file.close()
+
+    @staticmethod
+    def tprpred_plot(result_file):
+        """
+        Takes result file of TPRpred prediction and plots histogram
+        :param result_file: TPRpred predictions including pvalues
+        :return:
+        """
+        np_pval = []
+
+        with open(result_file) as file:
+
+            for line in file:
+                p_val = line.split()[-1].split("=")[-1]
+                np_pval.append(float(p_val))
+                next(file)
+
+        sns.countplot(np.array(np_pval))
+        plt.show()
