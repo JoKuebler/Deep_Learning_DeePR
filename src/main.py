@@ -3,12 +3,13 @@ from src.B_encoding import Encoder
 from src.C_conv_net import ConvolutionalNetwork
 from src.D_refine_net import RefinementNetwork
 from src.DataPreprocessing.A_query_aligner import Aligner
+from src.DataPreprocessing.B_match_file_parser import MatchParser
 import argparse
 import numpy as np
 import os
 
 
-def preprocess(align_object):
+def preprocess(align_object, matcher_object):
     """
     Runs several preprocessing steps
     and makes it easy to comment out if not needed
@@ -16,7 +17,9 @@ def preprocess(align_object):
     :return:
     """
 
-    align_object.pairwise_align()
+    # align_object.pairwise_align()
+
+    matcher_object.parse_info()
 
 
 def network_training(reader_object, encoder_object, conv_object, ref_object):
@@ -97,7 +100,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Preprocessing
+    # Path to queries
     aligner = Aligner('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/queries/third_set/')
+    # Path to MASTER match files
+    matcher = MatchParser('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_files/third_set/',
+                          '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/all_matches/')
 
     # Network
     # Init FileReader object for Training Data
@@ -111,10 +118,10 @@ if __name__ == '__main__':
 
     # Running
     # Preprocess Data
-    preprocess(aligner)
+    preprocess(aligner, matcher)
 
     # Train Network
-    network_training(file_read, encoder, conv_net, ref_net)
+    # network_training(file_read, encoder, conv_net, ref_net)
 
 
 
