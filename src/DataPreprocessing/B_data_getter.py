@@ -2,12 +2,13 @@ import os
 import re
 import warnings
 import json
+import subprocess
 from Bio import SeqIO
 from Bio import BiopythonWarning
 warnings.simplefilter('ignore', BiopythonWarning)
 
 
-class MatchParser:
+class DataGetter:
     """
     This class parses the match files obtained from running
     queries against PDB with MASTER
@@ -34,6 +35,8 @@ class MatchParser:
 
         # Do for all query match files
         for file in match_files:
+
+            print(file)
 
             # Consider only match files in folder
             if ".match" in file:
@@ -117,17 +120,14 @@ class MatchParser:
 
         output_file.close()
 
-    @staticmethod
-    def write_to_fasta(match_json):
+    def write_to_fasta(self, match_json):
         """
         Write each sequence in the match json into fasta format in one fasta file
         Important e.g TPRpred
         :param match_json: dictionary containing hits
         :return:
         """
-
-        with open(match_json) as file:
-            data = json.load(file)
+        data = self.read_match_json(match_json)
 
         output_file = open('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/fasta.fa', 'w+')
 
@@ -140,3 +140,28 @@ class MatchParser:
                 output_file.write(entry["seq"] + '\n')
 
         output_file.close()
+
+    @staticmethod
+    def read_match_json(match_json):
+
+        with open(match_json) as file:
+            data = json.load(file)
+
+        return data
+
+    # Download Fasta Files for PDB IDs
+    def download_fasta(self, match_json, download_dir):
+        """
+        Takes match dictionary and downloads all fasta files containing hits
+        :param match_json:
+        :param download_dir:
+        :return:
+        """
+        data = self.read_match_json(match_json)
+
+        print('FASTA Files to be downloaded: ' + str(len(data)))
+        for key in data:
+
+            subprocess.run(['curl', '-o', download_dir + str(key) +
+                            '.fasta', 'https://www.rcsb.org/pdb/download/downloadFastaFiles.do?structureIdList=' +
+                            str(key) + '&compressionType=uncompressed'])

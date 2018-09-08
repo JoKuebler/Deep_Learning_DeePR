@@ -3,30 +3,36 @@ from src.B_encoding import Encoder
 from src.C_conv_net import ConvolutionalNetwork
 from src.D_refine_net import RefinementNetwork
 from src.DataPreprocessing.A_query_aligner import Aligner
-from src.DataPreprocessing.B_file_parser import MatchParser
+from src.DataPreprocessing.B_data_getter import DataGetter
 import argparse
 import numpy as np
 import os
 
 
-def preprocess(align_object, parser_object):
+def preprocess(align_object, data_getter_object):
     """
     Runs several preprocessing steps
     and makes it easy to comment out if not needed
     :param align_object:
-    :param parser_object
+    :param data_getter_object
     :return:
     """
 
     # align_object.pairwise_align()
 
-    parser_object.parse_info()
+    # data_getter_object.parse_info()
+
+    data_getter_object.download_fasta('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_files/third_set/match_dict_beauty.json',
+                                      '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/full_length_fasta/')
 
 
 def network_training(reader_object, encoder_object, conv_object, ref_object):
     """
     Trains the network and evaluates parameters
     :param conv_object:
+    :param encoder_object
+    :param reader_object
+    :param ref_object
     :return:
     """
 
@@ -34,34 +40,34 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
     if args.retrain:
 
         # Get Training Data as list
-        pos_data, neg_data = file_read.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/positive_data.txt',
+        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/positive_data.txt',
                                                           '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/negative_data.txt')
-        pos_test, neg_test = file_read.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/test_set_pos.txt',
+        pos_test, neg_test = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/test_set_pos.txt',
                                                           '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/test_set_neg.txt')
         # Encode Training Data
-        enc_data, target = encoder.encode(pos_data, neg_data)
-        enc_test, target_test = encoder.encode(pos_test, neg_test)
+        enc_data, target = encoder_object.encode(pos_data, neg_data)
+        enc_test, target_test = encoder_object.encode(pos_test, neg_test)
 
         # Train network
-        conv_net.train_network(enc_data, target, enc_test, target_test)
+        conv_object.train_network(enc_data, target, enc_test, target_test)
 
         # Store model in given directory
-        conv_net.save_model(args.retrain)
+        conv_object.save_model(args.retrain)
 
-        # conv_net.load_model(args.retrain)
+        # conv_object.load_model(args.retrain)
 
         # Read in protein and cut into windows
-        pred_data, seq_id = file_read.read_pred_data(args.input, 34, 1)
+        pred_data, seq_id = reader_object.read_pred_data(args.input, 34, 1)
 
         # Encode input
-        enc_pred, target = encoder.encode(pred_data)
+        enc_pred, target = encoder_object.encode(pred_data)
 
-        conv_net.predict(pred_data, enc_pred)
+        conv_object.predict(pred_data, enc_pred)
 
     else:
 
         # Load model from given directory
-        conv_net.load_model(args.load)
+        conv_object.load_model(args.load)
 
         refine_training = []
         refine_training_labels = []
@@ -70,12 +76,12 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
         # Predict sequences to get prob profiles for refine network training
         for file in os.listdir(args.input_dir):
             # Read in protein and cut into windows
-            pred_data, seq_id, chain_id = file_read.read_pred_data(args.input_dir + file, 34, 1)
+            pred_data, seq_id, chain_id = reader_object.read_pred_data(args.input_dir + file, 34, 1)
 
             # Encode input
-            enc_pred, target = encoder.encode(pred_data)
+            enc_pred, target = encoder_object.encode(pred_data)
 
-            predictions, refine_data, refine_target = conv_net.predict(pred_data, enc_pred, seq_id, chain_id)
+            predictions, refine_data, refine_target = conv_object.predict(pred_data, enc_pred, seq_id, chain_id)
 
             # Store prob profile for next network to train
             refine_training.append(refine_data)
@@ -86,7 +92,7 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
         print(np.asarray(refine_training_labels).shape)
 
         # This takes the data of the CNN predictions and trains next network
-        ref_net.train_predict(np.asarray(refine_training), np.asarray(refine_training_labels), seq_id_to_map)
+        ref_object.train_predict(np.asarray(refine_training), np.asarray(refine_training_labels), seq_id_to_map)
 
 
 if __name__ == '__main__':
@@ -104,8 +110,8 @@ if __name__ == '__main__':
     # Path to queries
     aligner = Aligner('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/queries/third_set/')
     # Path to MASTER match files
-    parser = MatchParser('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_files/third_set/',
-                         '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/all_matches/')
+    data_getter = DataGetter('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_files/third_set/',
+                             '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/all_matches/')
 
     # Network
     # Init FileReader object for Training Data
@@ -119,7 +125,7 @@ if __name__ == '__main__':
 
     # Running
     # Preprocess Data
-    preprocess(aligner, parser)
+    preprocess(aligner, data_getter)
 
     # Train Network
     # network_training(file_read, encoder, conv_net, ref_net)
