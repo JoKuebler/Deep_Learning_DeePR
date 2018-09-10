@@ -120,19 +120,19 @@ class DataGetter:
 
         output_file.close()
 
-    def write_to_fasta(self, match_json):
+    @staticmethod
+    def write_to_fasta(match_data):
         """
         Write each sequence in the match json into fasta format in one fasta file
         Important e.g TPRpred
-        :param match_json: dictionary containing hits
+        :param match_data: dictionary containing hits
         :return:
         """
-        data = self.read_match_json(match_json)
 
         output_file = open('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/fasta.fa', 'w+')
 
-        for key in data:
-            for entry in data[key]:
+        for key in match_data:
+            for entry in match_data[key]:
 
                 header = str(">" + key + entry["chain"] + '\n')
 
@@ -144,24 +144,66 @@ class DataGetter:
     @staticmethod
     def read_match_json(match_json):
 
+        pos_data = []
+
         with open(match_json) as file:
             data = json.load(file)
 
-        return data
+        for key in data:
+            for entry in data[key]:
+                pos_data.append(entry["seq"])
 
-    # Download Fasta Files for PDB IDs
-    def download_fasta(self, match_json, download_dir):
+        return data, pos_data
+
+    @staticmethod
+    def write_pos_data(pos_data_arr):
+
+        output_file = open('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/new_pos_data.txt', 'w+')
+
+        for seq in pos_data_arr:
+            output_file.write(seq + '\n')
+
+    @staticmethod
+    def download_fasta(match_data, download_dir):
         """
         Takes match dictionary and downloads all fasta files containing hits
-        :param match_json:
+        :param match_data:
         :param download_dir:
         :return:
         """
-        data = self.read_match_json(match_json)
 
-        print('FASTA Files to be downloaded: ' + str(len(data)))
-        for key in data:
+        print('FASTA Files to be downloaded: ' + str(len(match_data)))
+        for key in match_data:
 
             subprocess.run(['curl', '-o', download_dir + str(key) +
                             '.fasta', 'https://www.rcsb.org/pdb/download/downloadFastaFiles.do?structureIdList=' +
                             str(key) + '&compressionType=uncompressed'])
+
+    @staticmethod
+    def single_chains_fasta(match_data, download_directory, output_directory):
+        """
+        Takes full length sequences of PDB ID and only keeps the chain a hit is found in
+        :param match_data
+        :param download_directory:
+        :param output_directory:
+        :return:
+        """
+
+        final_records = []
+
+        for file in os.listdir(download_directory):
+
+            records = list(SeqIO.parse(download_directory + file, 'fasta'))
+
+            for rec in records:
+                pdb_id = rec.id[0:4]
+                chain = rec.id[5]
+
+                for entry in match_data[pdb_id]:
+                    if chain == entry["chain"]:
+                        final_records.append(rec)
+                        break
+
+        for record in final_records:
+
+            SeqIO.write(record, output_directory + record.name[0:6].replace(':', '_') + '.fasta', "fasta")
