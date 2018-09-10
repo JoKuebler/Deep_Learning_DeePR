@@ -1,7 +1,7 @@
 from keras.layers import Conv1D, GlobalMaxPooling1D
 from keras.layers.core import Dense
 from keras.models import Sequential
-from keras.optimizers import Adam
+from keras.optimizers import SGD
 from keras.regularizers import l2
 from keras.models import model_from_json
 from src.B_encoding import Encoder
@@ -15,7 +15,7 @@ class ConvolutionalNetwork:
         self.input_layer = Conv1D(96, 9, padding='valid', kernel_regularizer=l2(0.01), input_shape=(34, 20))
 
         # Define optimizer
-        self.optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+        self.optimizer = SGD(lr=0.0001, momentum=0.9, nesterov=False)
 
         # Define model including layers and activation functions
         self.model = Sequential([

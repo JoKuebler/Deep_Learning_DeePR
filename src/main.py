@@ -24,11 +24,11 @@ def preprocess(align_object, data_getter_object):
     # Containing 6462 Hits from 4057 unique PDB structures
     match_data, pos_data = data_getter_object.read_match_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_files/third_set/match_dict_query_beauty.json')
 
-    data_getter_object.write_pos_data(pos_data)
+    # data_getter_object.write_pos_data(pos_data)
 
     # align_object.pairwise_align()
 
-    # data_getter_object.parse_info()
+    data_getter_object.parse_info()
 
     # data_getter_object.download_fasta(match_data, full_length_dir)
 
@@ -49,10 +49,10 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
     if args.retrain:
 
         # Get Training Data as list
-        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/positive_data.txt',
-                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/negative_data.txt')
-        pos_test, neg_test = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/test_set_pos.txt',
-                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/test_set_neg.txt')
+        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/new_pos_data.txt',
+                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/negative_data.txt')
+        pos_test, neg_test = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/test_set_pos.txt',
+                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/test_set_neg.txt')
         # Encode Training Data
         enc_data, target = encoder_object.encode(pos_data, neg_data)
         enc_test, target_test = encoder_object.encode(pos_test, neg_test)
