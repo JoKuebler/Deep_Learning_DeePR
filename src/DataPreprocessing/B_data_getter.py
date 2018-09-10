@@ -19,6 +19,17 @@ class DataGetter:
         self.match_files = match_files
         self.all_matches = all_matches
         self.identifier = 'a.118.8'
+        self.trueTprs = {
+            '1iyg': [(78, 'RDYVFYLAVGNYRLKEYEKALKYVRGLLQTEPQN')],
+            '1hz4': [(14, 'AEFNALRAQVAINDGNPDEAERLAKLALEELPPG'), (53, 'IVATSVLGEVLHCKGELTRSLALMQQTEQMARQH'), (93, 'LWSLIQQSEILFAQGFLQTAWETQEKAFQLINEQ'),
+                     (135, 'EFLVRIRAQLLWAWARLDEAEASARSGIEVLSSY'), (174, 'LQCLAMLIQCSLARGDLDNARSQLNRLENLLGNG'), (215, 'SNANKVRVIYWQMTGDKAAAANWLRHTAKPEFAN'),
+                     (253, 'QGQWRNIARAQILLGEFEPAEIVLEELNENARSL')],
+            '2fez': [(115, 'FVAEKTAGVHAAAAGRFEQASRHLSAALREWRGP'), (171, 'VLAHTAKAEAEIACGRASAVIAELEALTFEHPYR'), (205, 'EPLWTQLITAYYLSDRQSDALGAYRRVKTTLADD')],
+            '2aw6': [(191, 'QTVLKNALTISIMNRNLKEAQYYINQFEHLKTIK')],
+            '2ond': [(203, 'PEYVLAYIDYLSHLNEDNNTRVLFERVLTSGSLP')],
+            '2hr2': [(11, 'AYLALSDAQRQLVAGEYDEAAANCRRAMEISHTM'), (57, 'AFCHAGLAEALAGLRSFDEALHSADKALHYFNRR'), (102, 'ISAVYSRALALDGLGRGAEAMPEFKKVVEMIEER')],
+            '4lct': [(108, 'RMGYNDFGDFYYACGMLGDAFKNYIRTRDYCTTT'), (145, 'IHMCMNAILVSIEMGQFTHVTSYVNKAEQNPETL'), (184, 'AKLRCASGLAHLELKKYKLAARKFLDVNPELGNS')]
+        }
 
     def parse_info(self):
         """
@@ -121,7 +132,7 @@ class DataGetter:
         """
 
         # store hhr in json file in the directory
-        output_file = open(directory + 'match_dict_queryID.json', 'w+')
+        output_file = open(directory + 'match_dict_updated.json', 'w+')
 
         output_file.write(str(match_dict).replace('\'', '"'))
 
@@ -216,52 +227,83 @@ class DataGetter:
             SeqIO.write(record, output_directory + record.name[0:6].replace(':', '_') + '.fasta', "fasta")
 
     def hhpred_init_filter(self, hhr_results, match_data):
+        """
+        Filters HHpred results so that only sequences of TPR class are kept
+        :param hhr_results: .hhr result files
+        :param match_data: match dictionary
+        """
 
         # Dictionary holding all hits for each pdb ID
         new_match_dict = {}
 
         for file in os.listdir(hhr_results):
 
-            # Run hhr2json parser and create output file
-            output_file = open(hhr_results + 'output.json', 'w+')
-            subprocess.run(['python3', '/ebio/abt1_share/update_tprpred/code/src/DataPreprocessing/C_hhr2json.py', hhr_results + file], stdout=output_file)
+            if '.hhr' in file:
 
-            # Open output json
-            with open(hhr_results + 'output.json') as json_file:
+                # Run hhr2json parser and create output file
+                output_file = open(hhr_results + 'output.json', 'w+')
+                subprocess.run(['python3', '/ebio/abt1_share/update_tprpred/code/src/DataPreprocessing/C_hhr2json.py', hhr_results + file], stdout=output_file)
 
-                # for each output file tpr_fam gets reset
-                tpr_fam = False
+                # Open output json
+                with open(hhr_results + 'output.json') as json_file:
 
-                # Load data
-                data = json.load(json_file)
+                    # for each output file tpr_fam gets reset
+                    tpr_fam = False
 
-                # get PDB Id to find in matches file
-                pdb_id = data['info']['Query'][0:4]
-                chain = data['info']['Query'][5]
-                # get all hits
-                hits = data['hits']
+                    # Load data
+                    data = json.load(json_file)
 
-                # Check all hits
-                for hit in hits:
+                    # get PDB Id to find in matches file
+                    pdb_id = data['info']['Query'][0:4]
+                    chain = data['info']['Query'][5]
+                    # get all hits
+                    hits = data['hits']
+                    alignments = data['alignments']
 
-                    # If hit is found with a prob higher then 50%
-                    if self.identifier in hit['hit'] and int(hit['prob'] > 50.0):
-                            tpr_fam = True
+                    # Check if TPR is in range
+                    self.check_range(alignments)
 
-            # Append correct entry to net dict
-            if tpr_fam:
+                    # Check all hits
+                    for hit in hits:
 
-                # Get all entries with same chain id
-                for entry in match_data[pdb_id]:
-                    if entry["chain"] == chain:
+                        # If hit is found with a prob higher then 50%
+                        if self.identifier in hit['hit'] and int(hit['prob'] > 50.0):
+                                tpr_fam = True
 
-                        # dictionary fill
-                        if pdb_id in new_match_dict:
-                            new_match_dict[pdb_id].append(entry)
-                        else:
-                            new_match_dict[pdb_id] = [entry]
+                # Append correct entry to net dict
+                if tpr_fam:
 
-            # Remove output file
-            subprocess.run(['rm', hhr_results + 'output.json'])
+                    subprocess.run(['cp', hhr_results + file, '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/HHpred/results_init_filtered/'])
 
-            print(new_match_dict)
+                    # Get all entries with same chain id
+                    for entry in match_data[pdb_id]:
+                        if entry["chain"] == chain:
+
+                            # dictionary fill
+                            if pdb_id in new_match_dict:
+                                new_match_dict[pdb_id].append(entry)
+                            else:
+                                new_match_dict[pdb_id] = [entry]
+
+                # Remove output file
+                subprocess.run(['rm', hhr_results + 'output.json'])
+                # Writes json into query match directory
+                self.write_matches_json(self.match_files, new_match_dict)
+
+    def check_range(self, alignments):
+        """
+        Takes alignment and checks if TPR is in same range as true TPR
+        :param alignments:
+        :return: True if yes, False if no
+        """
+
+        for align in alignments:
+
+            if align['info']['probab'] > 50.0:
+
+                template = align['template']['name']
+
+                # true_tprs = self.trueTprs[template]
+
+                print(template)
+
