@@ -18,6 +18,7 @@ class DataGetter:
 
         self.match_files = match_files
         self.all_matches = all_matches
+        self.identifier = 'a.118.8'
 
     def parse_info(self):
         """
@@ -32,6 +33,8 @@ class DataGetter:
         match_dict = {}
 
         wrong = []
+
+        counter = 1
 
         # Do for all query match files
         for file in match_files:
@@ -52,6 +55,8 @@ class DataGetter:
                 # Iterate through query match file to make sure for every line there is a separate match.pdb file
                 for idx, val in enumerate(content):
 
+                    print(counter)
+                    counter += 1
                     # content of current match.pdb file to get position
                     match_content = open(self.all_matches + current_matches[idx]).readlines()
                     # split first and second line
@@ -91,6 +96,8 @@ class DataGetter:
 
         # Writes json into query match directory
         self.write_matches_json(self.match_files, match_dict)
+
+        print(wrong)
 
     @staticmethod
     def get_seq(pdb_file):
@@ -207,3 +214,54 @@ class DataGetter:
         for record in final_records:
 
             SeqIO.write(record, output_directory + record.name[0:6].replace(':', '_') + '.fasta', "fasta")
+
+    def hhpred_init_filter(self, hhr_results, match_data):
+
+        # Dictionary holding all hits for each pdb ID
+        new_match_dict = {}
+
+        for file in os.listdir(hhr_results):
+
+            # Run hhr2json parser and create output file
+            output_file = open(hhr_results + 'output.json', 'w+')
+            subprocess.run(['python3', '/ebio/abt1_share/update_tprpred/code/src/DataPreprocessing/C_hhr2json.py', hhr_results + file], stdout=output_file)
+
+            # Open output json
+            with open(hhr_results + 'output.json') as json_file:
+
+                # for each output file tpr_fam gets reset
+                tpr_fam = False
+
+                # Load data
+                data = json.load(json_file)
+
+                # get PDB Id to find in matches file
+                pdb_id = data['info']['Query'][0:4]
+                chain = data['info']['Query'][5]
+                # get all hits
+                hits = data['hits']
+
+                # Check all hits
+                for hit in hits:
+
+                    # If hit is found with a prob higher then 50%
+                    if self.identifier in hit['hit'] and int(hit['prob'] > 50.0):
+                            tpr_fam = True
+
+            # Append correct entry to net dict
+            if tpr_fam:
+
+                # Get all entries with same chain id
+                for entry in match_data[pdb_id]:
+                    if entry["chain"] == chain:
+
+                        # dictionary fill
+                        if pdb_id in new_match_dict:
+                            new_match_dict[pdb_id].append(entry)
+                        else:
+                            new_match_dict[pdb_id] = [entry]
+
+            # Remove output file
+            subprocess.run(['rm', hhr_results + 'output.json'])
+
+            print(new_match_dict)
