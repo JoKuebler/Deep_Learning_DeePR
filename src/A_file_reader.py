@@ -27,10 +27,13 @@ class FileReader:
 
         records = list(SeqIO.parse(input_file, 'fasta'))
 
+        prediction_seqs = []
+        seq_ids = []
+
         for record in records:
 
             sequence = record.seq
-            seq_id = record.id[:4]
+            seq_id = record.id
             # chain_id = record.id[5]
 
             # declare start of window
@@ -54,7 +57,10 @@ class FileReader:
 
                 fragments.append(current_fragment)
 
-            return fragments, seq_id
+            prediction_seqs.append(fragments)
+            seq_ids.append(seq_id)
+
+        return prediction_seqs, seq_ids
 
 
 

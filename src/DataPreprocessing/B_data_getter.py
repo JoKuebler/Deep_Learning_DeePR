@@ -261,10 +261,11 @@ class DataGetter:
                     alignments = data['alignments']
 
                     # Check if TPR is in range
-                    self.check_range(alignments)
-
+                    # self.check_range(alignments)
                     # Check all hits
                     for hit in hits:
+
+                        # print(hit)
 
                         # If hit is found with a prob higher then 50%
                         if self.identifier in hit['hit'] and int(hit['prob'] > 50.0):
@@ -286,11 +287,11 @@ class DataGetter:
                                 new_match_dict[pdb_id] = [entry]
 
                 # Remove output file
-                subprocess.run(['rm', hhr_results + 'output.json'])
-                # Writes json into query match directory
-                self.write_matches_json(self.match_files, new_match_dict)
+                # subprocess.run(['rm', hhr_results + 'output.json'])
+        # Writes json into query match directory
+        self.write_matches_json(self.match_files, new_match_dict)
 
-    def check_range(self, alignments):
+    def check_range(self, alignments, match_data):
         """
         Takes alignment and checks if TPR is in same range as true TPR
         :param alignments:
@@ -303,7 +304,22 @@ class DataGetter:
 
                 template = align['template']['name']
 
-                # true_tprs = self.trueTprs[template]
+                true_tprs = self.trueTprs[template]
+
+                # get sequence hit in template
+                templ_seq = align['template']['seq']
+
+                # for each true tpr
+                for tpr in true_tprs:
+
+                    # check if the tpr is in sequence of template hit
+                    if tpr[1] in templ_seq:
+
+                        # store index
+                        templ_index = templ_seq.index(tpr[1])
+
+                        # get sequence at this index in query for that hit
+                        query_seq = align['query']['seq'][templ_index:templ_index + 34]
 
                 print(template)
 

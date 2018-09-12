@@ -22,10 +22,10 @@ def preprocess(align_object, data_getter_object):
     single_chain_dir = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/single_chain_fasta/'
     hhpred_result_dir = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/HHpred/results/'
 
-    # Containing 6462 Hits from 4057 unique PDB structures
-    match_data, pos_data = data_getter_object.read_match_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_files/third_set/match_dict_query_beauty.json')
+    # Containing 1561 Hits from 800 unique PDB structures
+    match_data, pos_data = data_getter_object.read_match_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_files/third_set/match_dict_updated.json')
 
-    # data_getter_object.write_pos_data(pos_data)
+    data_getter_object.write_pos_data(pos_data)
 
     # align_object.pairwise_align()
 
@@ -35,7 +35,7 @@ def preprocess(align_object, data_getter_object):
 
     # data_getter_object.single_chains_fasta(match_data, full_length_dir, single_chain_dir)
 
-    data_getter_object.hhpred_init_filter(hhpred_result_dir, match_data)
+    # data_getter_object.hhpred_init_filter(hhpred_result_dir, match_data)
 
 
 def network_training(reader_object, encoder_object, conv_object, ref_object):
@@ -69,7 +69,7 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
         # conv_object.load_model(args.retrain)
 
         # Read in protein and cut into windows
-        pred_data, seq_id = reader_object.read_pred_data(args.input, 34, 1)
+        pred_data, seq_ids = reader_object.read_pred_data(args.input, 34, 1)
 
         # Encode input
         enc_pred, target = encoder_object.encode(pred_data)
@@ -81,30 +81,15 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
         # Load model from given directory
         conv_object.load_model(args.load)
 
-        refine_training = []
-        refine_training_labels = []
-        seq_id_to_map = []
+        # Read in protein and cut into windows
+        pred_data, seq_ids = reader_object.read_pred_data(args.input, 34, 1)
 
-        # Predict sequences to get prob profiles for refine network training
-        for file in os.listdir(args.input_dir):
-            # Read in protein and cut into windows
-            pred_data, seq_id, chain_id = reader_object.read_pred_data(args.input_dir + file, 34, 1)
+        for idx, seq_fragments in enumerate(pred_data):
 
             # Encode input
-            enc_pred, target = encoder_object.encode(pred_data)
+            enc_pred, target = encoder_object.encode(seq_fragments)
 
-            predictions, refine_data, refine_target = conv_object.predict(pred_data, enc_pred, seq_id, chain_id)
-
-            # Store prob profile for next network to train
-            refine_training.append(refine_data)
-            refine_training_labels.append(refine_target)
-            seq_id_to_map.append(seq_id + ' ' + chain_id)
-
-        print(np.asarray(refine_training).shape)
-        print(np.asarray(refine_training_labels).shape)
-
-        # This takes the data of the CNN predictions and trains next network
-        ref_object.train_predict(np.asarray(refine_training), np.asarray(refine_training_labels), seq_id_to_map)
+            conv_object.predict(seq_fragments, enc_pred, seq_ids[idx])
 
 
 if __name__ == '__main__':
@@ -137,10 +122,10 @@ if __name__ == '__main__':
 
     # Running
     # Preprocess Data
-    preprocess(aligner, data_getter)
+    # preprocess(aligner, data_getter)
 
     # Train Network
-    # network_training(file_read, encoder, conv_net, ref_net)
+    network_training(file_read, encoder, conv_net, ref_net)
 
 
 

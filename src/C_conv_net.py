@@ -15,7 +15,7 @@ class ConvolutionalNetwork:
         self.input_layer = Conv1D(96, 9, padding='valid', kernel_regularizer=l2(0.01), input_shape=(34, 20))
 
         # Define optimizer
-        self.optimizer = SGD(lr=0.0001, momentum=0.9, nesterov=False)
+        self.optimizer = SGD(lr=0.001, momentum=0.9, nesterov=False)
 
         # Define model including layers and activation functions
         self.model = Sequential([
@@ -52,7 +52,7 @@ class ConvolutionalNetwork:
         print("\n%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
         print('[ERROR,ACCURACY]', scores)
 
-    def predict(self, seqs, enc_seq, seq_id=None, chain_id=None):
+    def predict(self, seqs, enc_seq, seq_id, chain_id=None):
         """
         Predict encoded sequences
         :param seqs: Raw sequences for output later
@@ -63,7 +63,7 @@ class ConvolutionalNetwork:
         """
 
         # Print how many sequences are predicted (windows)
-        print(seq_id)
+        print('>', seq_id)
         print(str(len(seqs)) + ' Sequences predicted')
 
         # Make predictions
@@ -73,13 +73,15 @@ class ConvolutionalNetwork:
         for i in range(len(seqs)):
             print(i+1, seqs[i], predictions[i])
 
-        if seq_id is not None:
-            # for each prediction made by the CNN pass the data to encode it for the refinement network
-            padded_refine_data, target_vector = self.encoder.create_refine_data(predictions, seq_id, chain_id)
-        else:
-            padded_refine_data, target_vector = [], []
+        # For Refine LSTM
+        # if seq_id is not None:
+        #     # for each prediction made by the CNN pass the data to encode it for the refinement network
+        #     padded_refine_data, target_vector = self.encoder.create_refine_data(predictions, seq_id, chain_id)
+        # else:
+        #     padded_refine_data, target_vector = [], []
 
-        return predictions, padded_refine_data, target_vector
+        return predictions
+        # padded_refine_data, target_vector
 
     def save_model(self, directory):
         """
