@@ -5,6 +5,8 @@ from keras.optimizers import SGD
 from keras.regularizers import l2
 from keras.models import model_from_json
 from src.B_encoding import Encoder
+from sklearn.model_selection import StratifiedKFold
+import numpy as np
 
 
 class ConvolutionalNetwork:
@@ -15,7 +17,7 @@ class ConvolutionalNetwork:
         self.input_layer = Conv1D(96, 9, padding='valid', kernel_regularizer=l2(0.01), input_shape=(34, 20))
 
         # Define optimizer
-        self.optimizer = SGD(lr=0.001, momentum=0.9, nesterov=False)
+        self.optimizer = SGD(lr=0.005, momentum=0.9, nesterov=False)
 
         # Define model including layers and activation functions
         self.model = Sequential([
@@ -23,6 +25,7 @@ class ConvolutionalNetwork:
             Conv1D(128, 9, padding='valid', kernel_regularizer=l2(0.01)),
             Conv1D(256, 9, padding='valid', kernel_regularizer=l2(0.01)),
             Conv1D(512, 8, padding='valid', kernel_regularizer=l2(0.01)),
+            Conv1D(1024, 3, padding='valid', kernel_regularizer=l2(0.01)),
             Conv1D(144, 1, padding='valid', kernel_regularizer=l2(0.01)),
             GlobalMaxPooling1D(),
             Dense(2, activation='softmax', name='output_layer')
@@ -114,5 +117,37 @@ class ConvolutionalNetwork:
 
         # Set model
         self.model = loaded_model
+
+    def cross_validate(self, data, target):
+        """
+        k-fold cross validation of model with given training set
+        :param data: training samples
+        :param target: training labels
+        :return:
+        """
+
+        kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=7)
+        cvscores = []
+
+        one_dim_target = [1 if x[0] == 1 else 0 for x in target]
+        print(one_dim_target)
+
+        for train, test in kfold.split(data, one_dim_target):
+
+            # Fit network to data with parameters: Batch Size, Epochs
+            self.model.fit(data[train], target[train], validation_split=0.1, batch_size=75, epochs=15,
+                           shuffle=True, verbose=2)
+
+            # Evaluate model
+            scores = self.model.evaluate(data[test], target[test])
+
+            print("%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
+            cvscores.append(scores[1] * 100)
+
+        print('FINISHED')
+        print("%.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
+
+
+
 
 

@@ -5,8 +5,6 @@ from src.D_refine_net import RefinementNetwork
 from src.DataPreprocessing.A_query_aligner import Aligner
 from src.DataPreprocessing.B_data_getter import DataGetter
 import argparse
-import numpy as np
-import os
 
 
 def preprocess(align_object, data_getter_object):
@@ -63,6 +61,8 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
         # Train network
         conv_object.train_network(enc_data, target, enc_test, target_test)
 
+        conv_object.cross_validate(enc_data, target)
+
         # Store model in given directory
         conv_object.save_model(args.retrain)
 
@@ -71,10 +71,12 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
         # Read in protein and cut into windows
         pred_data, seq_ids = reader_object.read_pred_data(args.input, 34, 1)
 
-        # Encode input
-        enc_pred, target = encoder_object.encode(pred_data)
+        for idx, seq_fragments in enumerate(pred_data):
 
-        conv_object.predict(pred_data, enc_pred)
+            # Encode input
+            enc_pred, target = encoder_object.encode(seq_fragments)
+
+            conv_object.predict(seq_fragments, enc_pred, seq_ids[idx])
 
     else:
 
