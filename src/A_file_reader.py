@@ -30,37 +30,49 @@ class FileReader:
         prediction_seqs = []
         seq_ids = []
 
-        for record in records:
+        # If no header in fasta/txt file then this is the way data gets read in
+        if len(records) == 0:
+            with open(input_file) as file:
+                content = file.readlines()
 
-            sequence = record.seq
-            seq_id = record.id
-            # chain_id = record.id[5]
+                stripped = [x.strip() for x in content]
+                seq_ids = [x for x in content]
 
-            # declare start of window
-            window_start = int()
-            protein_length = len(record.seq)
+                prediction_seqs.append(stripped)
 
-            # calculate end of first window by adding size to start position
-            window_end = window_start + window_size
+                return prediction_seqs, seq_ids
+        else:
+            for record in records:
 
-            fragments = []
+                sequence = record.seq
+                seq_id = record.id
+                # chain_id = record.id[5]
 
-            # slide window over file until end is reached
-            while window_end <= protein_length:
-                current_fragment = sequence[window_start:window_end]
+                # declare start of window
+                window_start = int()
+                protein_length = len(record.seq)
 
-                # increment window start pos
-                window_start += step_size
+                # calculate end of first window by adding size to start position
+                window_end = window_start + window_size
 
-                # increment window end pos
-                window_end += step_size
+                fragments = []
 
-                fragments.append(current_fragment)
+                # slide window over file until end is reached
+                while window_end <= protein_length:
+                    current_fragment = sequence[window_start:window_end]
 
-            prediction_seqs.append(fragments)
-            seq_ids.append(seq_id)
+                    # increment window start pos
+                    window_start += step_size
 
-        return prediction_seqs, seq_ids
+                    # increment window end pos
+                    window_end += step_size
+
+                    fragments.append(current_fragment)
+
+                prediction_seqs.append(fragments)
+                seq_ids.append(seq_id)
+
+            return prediction_seqs, seq_ids
 
 
 

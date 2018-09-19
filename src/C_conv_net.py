@@ -49,17 +49,20 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        history = self.model.fit(data, target, batch_size=100, epochs=75, shuffle=True, verbose=2)
+        history = self.model.fit(data, target, batch_size=100, epochs=70, shuffle=True, verbose=2)
 
-        self.plot_loss(history)
-        self.plot_acc(history)
+        # self.plot_loss(history)
+        # self.plot_acc(history)
+
+        outputs = [layer.output for layer in self.model.layers]
+        print(outputs)
 
         # Evaluate model and print results
         scores = self.model.evaluate(test_data, test_target)
         print("\n%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
         print('[ERROR,ACCURACY]', scores)
 
-    def predict(self, seqs, enc_seq, seq_id, chain_id=None):
+    def predict(self, seqs, enc_seq, seq_id, target=None, chain_id=None):
         """
         Predict encoded sequences
         :param seqs: Raw sequences for output later
@@ -79,6 +82,8 @@ class ConvolutionalNetwork:
         # show the inputs and predicted outputs
         for i in range(len(seqs)):
             print(i+1, seqs[i], predictions[i])
+
+        self.f1_score(0.9, predictions, target)
 
         # For Refine LSTM
         # if seq_id is not None:
@@ -171,4 +176,32 @@ class ConvolutionalNetwork:
         plt.legend(['train'], loc='upper left')
         plt.show()
 
+    # Implemented so that the validation set is given via input to predict
+    def f1_score(self, threshold, predictions, labels):
+        """
+        Calculates the F1 score for validation set
+        :param threshold:
+        :param predictions:
+        :param labels:
+        :return:
+        """
 
+        tp = predictions[:, 0] > threshold
+
+        one_dim_target = [1 if x[0] == 1 else 0 for x in labels]
+
+        tp_count = 0
+        fp_count = 0
+        fn_count = 0
+
+        for index, elem in enumerate(tp):
+            if tp[index] == one_dim_target[index] and elem:
+                tp_count += 1
+            elif tp[index] != one_dim_target[index] and not elem:
+                fn_count += 1
+            elif tp[index] != one_dim_target[index] and elem:
+                fp_count += 1
+
+        f1 = (2 * tp_count)/(2 * tp_count + fn_count)
+
+        print('F1 Score: ', f1)

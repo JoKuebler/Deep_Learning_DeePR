@@ -50,7 +50,7 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
     if args.retrain:
 
         # Get Training Data as list
-        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/new_pos_data.txt',
+        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/new_pos_data.txt',
                                                               '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/negative_data.txt')
         pos_test, neg_test = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/test_set_pos.txt',
                                                               '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/test_set_neg.txt')
@@ -64,7 +64,7 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
         # conv_object.cross_validate(enc_data, target)
 
         # Store model in given directory
-        # conv_object.save_model(args.retrain)
+        conv_object.save_model(args.retrain)
 
         # conv_object.load_model(args.retrain)
 
@@ -76,7 +76,7 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
             # Encode input
             enc_pred, target = encoder_object.encode(seq_fragments)
 
-            conv_object.predict(seq_fragments, enc_pred, seq_ids[idx])
+            conv_object.predict(seq_fragments, enc_pred, seq_ids[idx], target)
 
     else:
 
@@ -88,10 +88,11 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
 
         for idx, seq_fragments in enumerate(pred_data):
 
-            # Encode input
+            # Encode input, first argument is pos data and will return pos label vector with same length and second
+            # argument is negative data and will do the same, is None if no negative data is given
             enc_pred, target = encoder_object.encode(seq_fragments)
 
-            conv_object.predict(seq_fragments, enc_pred, seq_ids[idx])
+            conv_object.predict(seq_fragments, enc_pred, seq_ids[idx], target)
 
 
 if __name__ == '__main__':
