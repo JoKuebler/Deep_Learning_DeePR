@@ -7,6 +7,7 @@ from keras.models import model_from_json
 from src.B_encoding import Encoder
 from sklearn.model_selection import StratifiedKFold
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class ConvolutionalNetwork:
@@ -17,7 +18,7 @@ class ConvolutionalNetwork:
         self.input_layer = Conv1D(96, 9, padding='valid', kernel_regularizer=l2(0.01), input_shape=(34, 20))
 
         # Define optimizer
-        self.optimizer = SGD(lr=0.005, momentum=0.9, nesterov=False)
+        self.optimizer = SGD(lr=0.009, momentum=0.9, nesterov=False)
 
         # Define model including layers and activation functions
         self.model = Sequential([
@@ -48,7 +49,10 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        self.model.fit(data, target, batch_size=100, epochs=75, shuffle=True, verbose=2)
+        history = self.model.fit(data, target, batch_size=100, epochs=75, shuffle=True, verbose=2)
+
+        self.plot_loss(history)
+        self.plot_acc(history)
 
         # Evaluate model and print results
         scores = self.model.evaluate(test_data, test_target)
@@ -135,7 +139,7 @@ class ConvolutionalNetwork:
         for train, test in kfold.split(data, one_dim_target):
 
             # Fit network to data with parameters: Batch Size, Epochs
-            self.model.fit(data[train], target[train], validation_split=0.1, batch_size=75, epochs=15,
+            self.model.fit(data[train], target[train], validation_split=0.1, batch_size=75, epochs=55,
                            shuffle=True, verbose=2)
 
             # Evaluate model
@@ -147,7 +151,24 @@ class ConvolutionalNetwork:
         print('FINISHED')
         print("%.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
 
+    @staticmethod
+    def plot_loss(history):
 
+        plt.plot(history.history['loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train'], loc='upper left')
+        plt.show()
 
+    @staticmethod
+    def plot_acc(history):
+
+        plt.plot(history.history['acc'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train'], loc='upper left')
+        plt.show()
 
 

@@ -61,10 +61,10 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
         # Train network
         conv_object.train_network(enc_data, target, enc_test, target_test)
 
-        conv_object.cross_validate(enc_data, target)
+        # conv_object.cross_validate(enc_data, target)
 
         # Store model in given directory
-        conv_object.save_model(args.retrain)
+        # conv_object.save_model(args.retrain)
 
         # conv_object.load_model(args.retrain)
 
