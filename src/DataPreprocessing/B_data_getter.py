@@ -258,10 +258,7 @@ class DataGetter:
                     chain = data['info']['Query'][5]
                     # get all hits
                     hits = data['hits']
-                    alignments = data['alignments']
 
-                    # Check if TPR is in range
-                    # self.check_range(alignments)
                     # Check all hits
                     for hit in hits:
 
@@ -291,35 +288,75 @@ class DataGetter:
         # Writes json into query match directory
         self.write_matches_json(self.match_files, new_match_dict)
 
-    def check_range(self, alignments, match_data):
+    def check_range(self, hhr_filtered, match_data):
         """
         Takes alignment and checks if TPR is in same range as true TPR
-        :param alignments:
+        :param hhr_filtered: only sequences belonging to TPR class
         :return: True if yes, False if no
         """
 
-        for align in alignments:
+        final_seqs = []
+        final_entries = {}
 
-            if align['info']['probab'] > 50.0:
+        for file in os.listdir(hhr_filtered):
 
-                template = align['template']['name']
+            print(file)
+            found = False
 
-                true_tprs = self.trueTprs[template]
+            if '.hhr' in file:
 
-                # get sequence hit in template
-                templ_seq = align['template']['seq']
+                # Run hhr2json parser and create output file
+                output_file = open(hhr_filtered + 'output.json', 'w+')
+                subprocess.run(['python3', '/ebio/abt1_share/update_tprpred/code/src/DataPreprocessing/C_hhr2json.py', hhr_filtered + file], stdout=output_file)
 
-                # for each true tpr
-                for tpr in true_tprs:
+                # Open output json
+                with open(hhr_filtered + 'output.json') as json_file:
 
-                    # check if the tpr is in sequence of template hit
-                    if tpr[1] in templ_seq:
+                    # Load data
+                    data = json.load(json_file)
+                    alignments = data['alignments']
 
-                        # store index
-                        templ_index = templ_seq.index(tpr[1])
+                    for align in alignments:
 
-                        # get sequence at this index in query for that hit
-                        query_seq = align['query']['seq'][templ_index:templ_index + 34]
+                        if align['info']['probab'] > 50.0:
 
-                print(template)
+                            if align['template']['start'] != -1:
+                                template = align['template']['name'][0:4].lower()
+                                query_id = align['query']['name'].split(':')[0]
 
+                                true_tprs = self.trueTprs[template]
+
+                                # get sequence hit in template
+                                templ_seq = align['template']['seq']
+
+                                # for each true tpr
+                                for tpr in true_tprs:
+
+                                    # check if the tpr is in sequence of template hit
+                                    if tpr[1] in templ_seq:
+
+                                        # store index
+                                        templ_index = templ_seq.index(tpr[1])
+
+                                        # get sequence at this index in query for that hit
+                                        query_seq = align['query']['seq'][templ_index:templ_index + 34]
+
+                                        for entry in match_data[query_id]:
+
+                                            if entry['seq'] == query_seq:
+
+                                                if query_seq not in final_seqs:
+                                                    final_seqs.append(query_seq)
+                                                    # dictionary fill
+                                                    if query_id in final_entries:
+                                                        final_entries[query_id].append(entry)
+                                                    else:
+                                                        final_entries[query_id] = [entry]
+
+                            else:
+                                print('Weird found')
+
+        self.write_pos_data(final_seqs)
+        self.write_matches_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/', final_entries)
+        print(len(final_entries))
+        print(len(final_seqs))

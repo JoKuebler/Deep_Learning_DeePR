@@ -224,7 +224,7 @@ def handlesequenceline(line, d):
     else:
         tmpName = spt[0]
         if len(tmpName.split("|")) > 1:
-            tmpName = tmpName.split("|")[1]
+            tmpName = tmpName.split("|")[0]
         d["name"] = tmpName
         d["seq"] += spt[2]
         q = line.index(spt[2])

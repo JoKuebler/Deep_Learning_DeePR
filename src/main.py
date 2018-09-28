@@ -19,11 +19,12 @@ def preprocess(align_object, data_getter_object):
     full_length_dir = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/full_length_fasta/'
     single_chain_dir = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/single_chain_fasta/'
     hhpred_result_dir = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/HHpred/results/'
+    hhpred_querydb_results = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/HHpred/results_querydb/'
 
     # Containing 1561 Hits from 800 unique PDB structures
-    match_data, pos_data = data_getter_object.read_match_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_files/third_set/match_dict_updated.json')
+    match_data, pos_data = data_getter_object.read_match_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_dict_full.json')
 
-    data_getter_object.write_pos_data(pos_data)
+    # data_getter_object.write_pos_data(pos_data)
 
     # align_object.pairwise_align()
 
@@ -34,6 +35,8 @@ def preprocess(align_object, data_getter_object):
     # data_getter_object.single_chains_fasta(match_data, full_length_dir, single_chain_dir)
 
     # data_getter_object.hhpred_init_filter(hhpred_result_dir, match_data)
+
+    data_getter_object.check_range(hhpred_querydb_results, match_data)
 
 
 def network_training(reader_object, encoder_object, conv_object, ref_object):
