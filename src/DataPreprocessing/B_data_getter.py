@@ -292,16 +292,15 @@ class DataGetter:
         """
         Takes alignment and checks if TPR is in same range as true TPR
         :param hhr_filtered: only sequences belonging to TPR class
-        :return: True if yes, False if no
+        :return: confirmed files, unconfirmed files, final raw sequences, final entries as dictionary
         """
 
         final_seqs = []
         final_entries = {}
+        confirmed = []
+        unconfirmed = []
 
         for file in os.listdir(hhr_filtered):
-
-            print(file)
-            found = False
 
             if '.hhr' in file:
 
@@ -316,47 +315,60 @@ class DataGetter:
                     data = json.load(json_file)
                     alignments = data['alignments']
 
+                    # for each file check each alignment
                     for align in alignments:
 
-                        if align['info']['probab'] > 50.0:
+                        # only consider if alignment hits with higher 50% probability also some alignments are empty
+                        if align['info']['probab'] > 50.0 and align['template']['start'] != -1:
 
-                            if align['template']['start'] != -1:
-                                template = align['template']['name'][0:4].lower()
-                                query_id = align['query']['name'].split(':')[0]
+                            # query id is the same in all alignments
+                            query_id = align['query']['name'].split(':')[0]
+                            chain = align['query']['name'][5]
 
-                                true_tprs = self.trueTprs[template]
+                            # template is the id of the sequence the query was aligned with
+                            # one of the seven true tpr sequences
+                            template = align['template']['name'][0:4].lower()
+                            true_tprs = self.trueTprs[template]
+                            # get sequence hit in template
+                            templ_seq = align['template']['seq']
 
-                                # get sequence hit in template
-                                templ_seq = align['template']['seq']
+                            # for each true tpr
+                            for tpr in true_tprs:
 
-                                # for each true tpr
-                                for tpr in true_tprs:
+                                # check if the tpr is in sequence of template hit
+                                if tpr[1] in templ_seq:
 
-                                    # check if the tpr is in sequence of template hit
-                                    if tpr[1] in templ_seq:
+                                    # store index
+                                    templ_index = templ_seq.index(tpr[1])
+                                    # get sequence at this index in query for that hit
+                                    query_seq = align['query']['seq'][templ_index:templ_index + 34]
 
-                                        # store index
-                                        templ_index = templ_seq.index(tpr[1])
+                                    # check if the sequence in the query which aligns to true tpr in template is in positive data
+                                    # that means check in match.json
+                                    for entry in match_data[query_id]:
 
-                                        # get sequence at this index in query for that hit
-                                        query_seq = align['query']['seq'][templ_index:templ_index + 34]
+                                        # chain has to be the same and if it is the same then take sequence and store it
+                                        if entry['chain'] == chain and entry['seq'] == query_seq:
 
-                                        for entry in match_data[query_id]:
+                                            # to not get same fragments check if it is already stored
+                                            if query_seq not in final_seqs:
 
-                                            if entry['seq'] == query_seq:
+                                                # store confirmed fragment
+                                                final_seqs.append(query_seq)
 
-                                                if query_seq not in final_seqs:
-                                                    final_seqs.append(query_seq)
-                                                    # dictionary fill
-                                                    if query_id in final_entries:
-                                                        final_entries[query_id].append(entry)
-                                                    else:
-                                                        final_entries[query_id] = [entry]
+                                                # store confirmed file name
+                                                if query_id + '_' + chain not in confirmed:
+                                                    confirmed.append(file[:-4])
 
-                            else:
-                                print('Weird found')
+                                                # dictionary fill to creat updated match.json
+                                                if query_id in final_entries:
+                                                    final_entries[query_id].append(entry)
+                                                else:
+                                                    final_entries[query_id] = [entry]
 
-        self.write_pos_data(final_seqs)
-        self.write_matches_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/', final_entries)
-        print(len(final_entries))
-        print(len(final_seqs))
+        # Store unconfirmed files
+        for file in os.listdir(hhr_filtered):
+            if file[:-4] not in confirmed:
+                unconfirmed.append(file)
+
+        return confirmed, unconfirmed, final_seqs, final_entries

@@ -36,7 +36,7 @@ def preprocess(align_object, data_getter_object):
 
     # data_getter_object.hhpred_init_filter(hhpred_result_dir, match_data)
 
-    data_getter_object.check_range(hhpred_querydb_results, match_data)
+    confirmed, unconfirmed, final_seqs, final_entries = data_getter_object.check_range(hhpred_querydb_results, match_data)
 
 
 def network_training(reader_object, encoder_object, conv_object, ref_object):
@@ -129,10 +129,10 @@ if __name__ == '__main__':
 
     # Running
     # Preprocess Data
-    # preprocess(aligner, data_getter)
+    preprocess(aligner, data_getter)
 
     # Train Network
-    network_training(file_read, encoder, conv_net, ref_net)
+    # network_training(file_read, encoder, conv_net, ref_net)
 
 
 

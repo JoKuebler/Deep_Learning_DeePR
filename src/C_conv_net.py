@@ -88,7 +88,7 @@ class ConvolutionalNetwork:
             self.f1_score(0.9, predictions, target)
 
         # print max 10 probs
-        self.max_n(predictions, 10)
+        self.max_n(predictions, seqs, 30)
 
         # For Refine LSTM
         # if seq_id is not None:
@@ -212,7 +212,7 @@ class ConvolutionalNetwork:
         print('F1 Score: ', f1)
 
     @staticmethod
-    def max_n(predictions, top):
+    def max_n(predictions, seqs, top):
         """
         prints out the top n probabilities with given position in the input sequence
         :param predictions: per window probs
@@ -231,7 +231,7 @@ class ConvolutionalNetwork:
                 if pos_probs[j] > max1:
                     max1 = pos_probs[j]
 
-            final_list.append((max1, index_getter.index(max1) + 1))
+            final_list.append((max1, index_getter.index(max1) + 1, str(seqs[index_getter.index(max1)])))
             pos_probs.remove(max1)
 
         print(final_list)
