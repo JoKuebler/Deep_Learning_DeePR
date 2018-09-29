@@ -53,7 +53,7 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
     if args.retrain:
 
         # Get Training Data as list
-        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/new_pos_data.txt',
+        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/pos_data_templatefilter.txt',
                                                               '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/negative_data.txt')
         pos_test, neg_test = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/test_set_pos.txt',
                                                               '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/test_set_neg.txt')
@@ -95,7 +95,8 @@ def network_training(reader_object, encoder_object, conv_object, ref_object):
             # argument is negative data and will do the same, is None if no negative data is given
             enc_pred, target = encoder_object.encode(seq_fragments)
 
-            conv_object.predict(seq_fragments, enc_pred, seq_ids[idx], target)
+            # To predict F1 score give target as parameter
+            conv_object.predict(seq_fragments, enc_pred, seq_ids[idx])
 
 
 if __name__ == '__main__':
