@@ -1,7 +1,7 @@
-from keras.layers import Conv1D, GlobalMaxPooling1D
+from keras.layers import Conv1D, GlobalMaxPooling1D, BatchNormalization, MaxPooling1D, AveragePooling1D, Dropout
 from keras.layers.core import Dense
 from keras.models import Sequential
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam
 from keras.regularizers import l2
 from keras.models import model_from_json
 from src.B_encoding import Encoder
@@ -18,19 +18,51 @@ class ConvolutionalNetwork:
         self.input_layer = Conv1D(96, 9, padding='valid', kernel_regularizer=l2(0.01), input_shape=(34, 20))
 
         # Define optimizer
+        # self.optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
         self.optimizer = SGD(lr=0.009, momentum=0.9, nesterov=False)
 
         # Define model including layers and activation functions
         self.model = Sequential([
             self.input_layer,
-            Conv1D(128, 9, padding='valid', kernel_regularizer=l2(0.01)),
-            Conv1D(256, 9, padding='valid', kernel_regularizer=l2(0.01)),
-            Conv1D(512, 8, padding='valid', kernel_regularizer=l2(0.01)),
-            Conv1D(1024, 3, padding='valid', kernel_regularizer=l2(0.01)),
-            Conv1D(144, 1, padding='valid', kernel_regularizer=l2(0.01)),
+            Conv1D(128, 9, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
+            Conv1D(256, 9, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
+            Conv1D(512, 8, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
+            Conv1D(1024, 3, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
+            # Conv1D(1024, 3, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
+            # Conv1D(1024, 3, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
+            Conv1D(144, 1, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
             GlobalMaxPooling1D(),
+            Dropout(0.2),
             Dense(2, activation='softmax', name='output_layer')
         ])
+
+        # self.model = Sequential([
+        #     self.input_layer,
+        #     Conv1D(64, 9, strides=1, padding='same', activation='relu'),
+        #     BatchNormalization(),
+        #     MaxPooling1D(pool_size=3, strides=2, padding='same'),
+        #     Conv1D(128, 9, strides=1, padding='same', activation='relu'),
+        #     BatchNormalization(),
+        #     MaxPooling1D(pool_size=3, strides=2, padding='same'),
+        #     Conv1D(256, 8, strides=1, padding='same', activation='relu'),
+        #     BatchNormalization(),
+        #     Conv1D(256, 3, strides=1, padding='same', activation='relu'),
+        #     BatchNormalization(),
+        #     MaxPooling1D(pool_size=3, strides=2, padding='same'),
+        #     Conv1D(512, 3, strides=1, padding='same', activation='relu'),
+        #     BatchNormalization(),
+        #     Conv1D(512, 3, strides=1, padding='same', activation='relu'),
+        #     BatchNormalization(),
+        #     MaxPooling1D(pool_size=3, strides=2, padding='same'),
+        #     Conv1D(1024, 3, strides=1, padding='same', activation='relu'),
+        #     BatchNormalization(),
+        #     Conv1D(1024, 1, strides=1, padding='same', activation='relu'),
+        #     BatchNormalization(),
+        #     MaxPooling1D(pool_size=3, strides=2, padding='same'),
+        #     AveragePooling1D(pool_size=1, strides=1, padding='valid'),
+        #     GlobalMaxPooling1D(),
+        #     Dense(2, activation='softmax', name='output_layer')
+        # ])
 
         self.encoder = Encoder()
 
@@ -49,9 +81,9 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        history = self.model.fit(data, target, batch_size=100, epochs=70, shuffle=True, verbose=2)
+        history = self.model.fit(data, target, validation_split=0.1, batch_size=16, epochs=70, shuffle=True, verbose=2)
 
-        # self.plot_loss(history)
+        self.plot_loss(history)
         # self.plot_acc(history)
 
         outputs = [layer.output for layer in self.model.layers]
@@ -165,10 +197,11 @@ class ConvolutionalNetwork:
     def plot_loss(history):
 
         plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
         plt.title('model loss')
         plt.ylabel('loss')
         plt.xlabel('epoch')
-        plt.legend(['train'], loc='upper left')
+        plt.legend(['train', 'validation'], loc='upper left')
         plt.show()
 
     @staticmethod

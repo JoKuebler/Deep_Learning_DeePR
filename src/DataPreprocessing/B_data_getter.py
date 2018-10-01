@@ -369,6 +369,6 @@ class DataGetter:
         # Store unconfirmed files
         for file in os.listdir(hhr_filtered):
             if file[:-4] not in confirmed:
-                unconfirmed.append(file)
+                unconfirmed.append(file[:-4])
 
         return confirmed, unconfirmed, final_seqs, final_entries
