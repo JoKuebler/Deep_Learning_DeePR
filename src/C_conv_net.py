@@ -24,11 +24,16 @@ class ConvolutionalNetwork:
         # Define model including layers and activation functions
         self.model = Sequential([
             self.input_layer,
-            Conv1D(128, 9, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
-            Conv1D(256, 9, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
-            Conv1D(512, 8, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
-            Conv1D(1024, 3, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
-            Conv1D(144, 1, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
+            MaxPooling1D(pool_size=2),
+            Conv1D(128, 9, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
+            MaxPooling1D(pool_size=2),
+            Conv1D(256, 9, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
+            MaxPooling1D(pool_size=2),
+            Conv1D(512, 8, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
+            MaxPooling1D(pool_size=2),
+            Conv1D(1024, 3, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
+            MaxPooling1D(pool_size=1),
+            Conv1D(144, 1, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
             GlobalMaxPooling1D(),
             Dropout(0.1),
             Dense(2, activation='softmax', name='output_layer')
@@ -122,16 +127,16 @@ class ConvolutionalNetwork:
         # gets passed to final prediction filter
         top_n = self.max_n(predictions, seqs, len(predictions))
 
-        final_predictions, cut_out = self.filter_predictions(top_n, 0.70)
+        final_predictions, cut_out = self.filter_predictions(top_n, 0.65)
 
         print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
         # show the inputs and predicted outputs
         for i in range(len(final_predictions)):
-            print(final_predictions[i][1], final_predictions[i][2], final_predictions[i][1]+34, final_predictions[i][0])
+            print(final_predictions[i][1], final_predictions[i][2], final_predictions[i][1]+33, final_predictions[i][0])
 
         print('Filtered out due to overlapping with higher probabilities')
         for i in range(len(cut_out)):
-            print(cut_out[i][1], cut_out[i][2], cut_out[i][1] + 34, cut_out[i][0])
+            print(cut_out[i][1], cut_out[i][2], cut_out[i][1] + 33, cut_out[i][0])
 
         # For Refine LSTM
         # if seq_id is not None:
@@ -280,41 +285,65 @@ class ConvolutionalNetwork:
 
         return final_list
 
-    @staticmethod
-    def filter_predictions(predictions, threshold):
+    def filter_predictions(self, predictions, threshold):
+        """
+        Complex method to filter output predictions so no overlapping TPRs are predicted and always the ones with
+        the highest probabilities are shown to the user
+        :param predictions: probabilities for each window
+        :param threshold: probability threshold
+        :return:
+        """
 
         init_filter = []
         cut_out = []
-
         index = 1
+        after = ''
 
         # Apply threshold
-        [init_filter.append(x) if x[0] > threshold else '' for x in predictions]
+        [init_filter.append(x) if x[0] > 0.65 else '' for x in predictions]
 
         # Sort by position
         pos_sort = sorted(init_filter, key=lambda triple: triple[1])
+
+        print(pos_sort)
 
         # in order to modify list in the loop we need a while loop here
         while index < len(pos_sort):
 
             # if element is deleted do not increment index
             deleted = False
+            double_check = True
 
             # elements to compare
             current, before = pos_sort[index], pos_sort[index-1]
 
-            # when they are closer then 34 AA together
-            if current[1] - before[1] < 34:
+            if index < len(pos_sort)-1:
+                after = pos_sort[index+1]
 
-                # remove only if propability is worse
-                if current[0] < before[0]:
-                    pos_sort.remove(current)
-                    cut_out.append(current)
-                    deleted = True
-                elif current[0] > before[0]:
-                    pos_sort.remove(before)
-                    cut_out.append(before)
-                    deleted = True
+            # when only two predictions are made there cant be a comparison with three elements
+            if len(pos_sort) > 2:
+                # Special case of three windows are relative close to each other all three have to be considered
+                if after[1] - before[1] <= 34 and current[1] - before[1] < 34 and current is not after:
+                    # Case 1 the middle one is removed
+                    if before[0] < current[0] < after[0]:
+                        pos_sort, cut_out, deleted = self.rem_app_element(pos_sort, cut_out, current)
+                        double_check = False
+                    # Case 2 the right one is removed
+                    elif after[0] < before[0] < current[0]:
+                        pos_sort, cut_out, deleted = self.rem_app_element(pos_sort, cut_out, after)
+                        double_check = False
+                    else:
+                        double_check = True
+
+            # If no element is removed in the previous check
+            if double_check:
+                # when they are closer then 34 AA together
+                if current[1] - before[1] < 34:
+                    # remove only if propability is worse
+                    if current[0] < before[0]:
+                        pos_sort, cut_out, deleted = self.rem_app_element(pos_sort, cut_out, current)
+                    elif current[0] > before[0]:
+                        pos_sort, cut_out, deleted = self.rem_app_element(pos_sort, cut_out, before)
 
             # increment index only if no element is deleted
             if not deleted:
@@ -323,4 +352,12 @@ class ConvolutionalNetwork:
         # could also use initial findings but new variable makes it more clear here
         final = pos_sort
         return final, cut_out
+
+    @staticmethod
+    def rem_app_element(filter_list, cut_out, element):
+
+        filter_list.remove(element)
+        cut_out.append(element)
+
+        return filter_list, cut_out, True
 
