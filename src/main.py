@@ -63,13 +63,13 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
         enc_test, target_test = encoder_object.encode(pos_test, neg_test)
 
         # Train network or SVM
-        # conv_object.train_network(enc_data, target, enc_test, target_test)
-        svm.train_svm(enc_data, target)
+        conv_object.train_network(enc_data, target, enc_test, target_test)
+        # svm.train_svm(enc_data, target)
 
         # conv_object.cross_validate(enc_data, target)
 
         # Store model in given directory
-        # conv_object.save_model(args.retrain)
+        conv_object.save_model(args.retrain)
 
         # conv_object.load_model(args.retrain)
 
@@ -81,8 +81,8 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
             # Encode input
             enc_pred, target = encoder_object.encode(seq_fragments)
 
-            # conv_object.predict(seq_fragments, enc_pred, seq_ids[idx], target)
-            svm.predict(seq_fragments, enc_pred, seq_ids[idx], target)
+            conv_object.predict(seq_fragments, enc_pred, seq_ids[idx], target)
+            # svm.predict(seq_fragments, enc_pred, seq_ids[idx], target)
 
     else:
 

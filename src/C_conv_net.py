@@ -19,7 +19,7 @@ class ConvolutionalNetwork:
 
         # Define optimizer
         # self.optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
-        self.optimizer = SGD(lr=0.009, momentum=0.9, nesterov=False)
+        self.optimizer = SGD(lr=0.005, momentum=0.9, nesterov=False)
 
         # Define model including layers and activation functions
         self.model = Sequential([
@@ -28,11 +28,9 @@ class ConvolutionalNetwork:
             Conv1D(256, 9, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
             Conv1D(512, 8, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
             Conv1D(1024, 3, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
-            # Conv1D(1024, 3, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
-            # Conv1D(1024, 3, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
             Conv1D(144, 1, padding='valid', activation='relu', kernel_regularizer=l2(0.01)),
             GlobalMaxPooling1D(),
-            Dropout(0.2),
+            Dropout(0.1),
             Dense(2, activation='softmax', name='output_layer')
         ])
 
@@ -81,9 +79,9 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        history = self.model.fit(data, target, validation_split=0.1, batch_size=16, epochs=70, shuffle=True, verbose=2)
+        self.model.fit(data, target, batch_size=16, epochs=75, shuffle=True, verbose=2)
 
-        self.plot_loss(history)
+        # self.plot_loss(history)
         # self.plot_acc(history)
 
         outputs = [layer.output for layer in self.model.layers]
@@ -119,8 +117,21 @@ class ConvolutionalNetwork:
             # To calculate F1 score target has to be given
             self.f1_score(0.9, predictions, target)
 
-        # print max 10 probs
-        self.max_n(predictions, seqs, 30)
+        # sort according to max N probs
+        # len(predictions) stores all predictions in a nice way (prob, pos, seq)
+        # gets passed to final prediction filter
+        top_n = self.max_n(predictions, seqs, len(predictions))
+
+        final_predictions, cut_out = self.filter_predictions(top_n, 0.70)
+
+        print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
+        # show the inputs and predicted outputs
+        for i in range(len(final_predictions)):
+            print(final_predictions[i][1], final_predictions[i][2], final_predictions[i][1]+34, final_predictions[i][0])
+
+        print('Filtered out due to overlapping with higher probabilities')
+        for i in range(len(cut_out)):
+            print(cut_out[i][1], cut_out[i][2], cut_out[i][1] + 34, cut_out[i][0])
 
         # For Refine LSTM
         # if seq_id is not None:
@@ -267,5 +278,49 @@ class ConvolutionalNetwork:
             final_list.append((max1, index_getter.index(max1) + 1, str(seqs[index_getter.index(max1)])))
             pos_probs.remove(max1)
 
-        print(final_list)
+        return final_list
+
+    @staticmethod
+    def filter_predictions(predictions, threshold):
+
+        init_filter = []
+        cut_out = []
+
+        index = 1
+
+        # Apply threshold
+        [init_filter.append(x) if x[0] > threshold else '' for x in predictions]
+
+        # Sort by position
+        pos_sort = sorted(init_filter, key=lambda triple: triple[1])
+
+        # in order to modify list in the loop we need a while loop here
+        while index < len(pos_sort):
+
+            # if element is deleted do not increment index
+            deleted = False
+
+            # elements to compare
+            current, before = pos_sort[index], pos_sort[index-1]
+
+            # when they are closer then 34 AA together
+            if current[1] - before[1] < 34:
+
+                # remove only if propability is worse
+                if current[0] < before[0]:
+                    pos_sort.remove(current)
+                    cut_out.append(current)
+                    deleted = True
+                elif current[0] > before[0]:
+                    pos_sort.remove(before)
+                    cut_out.append(before)
+                    deleted = True
+
+            # increment index only if no element is deleted
+            if not deleted:
+                index += 1
+
+        # could also use initial findings but new variable makes it more clear here
+        final = pos_sort
+        return final, cut_out
 
