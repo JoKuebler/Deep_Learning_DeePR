@@ -127,13 +127,15 @@ class ConvolutionalNetwork:
         # gets passed to final prediction filter
         top_n = self.max_n(predictions, seqs, len(predictions))
 
-        final_predictions, cut_out = self.filter_predictions(top_n, 0.65)
+        final_predictions, cut_out = self.filter_predictions(top_n, 0.80)
 
+        print('\n\n')
         print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
         # show the inputs and predicted outputs
         for i in range(len(final_predictions)):
             print(final_predictions[i][1], final_predictions[i][2], final_predictions[i][1]+33, final_predictions[i][0])
 
+        print('\n\n')
         print('Filtered out due to overlapping with higher probabilities')
         for i in range(len(cut_out)):
             print(cut_out[i][1], cut_out[i][2], cut_out[i][1] + 33, cut_out[i][0])
@@ -296,61 +298,70 @@ class ConvolutionalNetwork:
 
         init_filter = []
         cut_out = []
-        index = 1
-        after = ''
+        oldfit_counter = 0
 
         # Apply threshold
-        [init_filter.append(x) if x[0] > 0.65 else '' for x in predictions]
+        [init_filter.append(x) if x[0] > threshold else '' for x in predictions]
 
         # Sort by position
         pos_sort = sorted(init_filter, key=lambda triple: triple[1])
 
-        print(pos_sort)
+        print('\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
+        print('USING THRESHOLD OF', threshold, 'I FOUND', len(pos_sort), 'POSITIVE HITS')
 
-        # in order to modify list in the loop we need a while loop here
-        while index < len(pos_sort):
+        tmp, final = [], []
 
-            # if element is deleted do not increment index
-            deleted = False
-            double_check = True
+        # For all hits which survive the threshold
+        for idx, elem in enumerate(pos_sort):
 
-            # elements to compare
-            current, before = pos_sort[index], pos_sort[index-1]
+            old = tmp
+            tmp, oldfit = [], []
 
-            if index < len(pos_sort)-1:
-                after = pos_sort[index+1]
+            # List of a span of 34 aa starting with each element
+            [tmp.append(x) if x[1] - 34 < elem[1] else '' for x in pos_sort[idx:]]
 
-            # when only two predictions are made there cant be a comparison with three elements
-            if len(pos_sort) > 2:
-                # Special case of three windows are relative close to each other all three have to be considered
-                if after[1] - before[1] <= 34 and current[1] - before[1] < 34 and current is not after:
-                    # Case 1 the middle one is removed
-                    if before[0] < current[0] < after[0]:
-                        pos_sort, cut_out, deleted = self.rem_app_element(pos_sort, cut_out, current)
-                        double_check = False
-                    # Case 2 the right one is removed
-                    elif after[0] < before[0] < current[0]:
-                        pos_sort, cut_out, deleted = self.rem_app_element(pos_sort, cut_out, after)
-                        double_check = False
-                    else:
-                        double_check = True
+            # hit with highest prob in current list
+            max_prob = max(tmp, key=lambda item: item[0])
 
-            # If no element is removed in the previous check
-            if double_check:
-                # when they are closer then 34 AA together
-                if current[1] - before[1] < 34:
-                    # remove only if propability is worse
-                    if current[0] < before[0]:
-                        pos_sort, cut_out, deleted = self.rem_app_element(pos_sort, cut_out, current)
-                    elif current[0] > before[0]:
-                        pos_sort, cut_out, deleted = self.rem_app_element(pos_sort, cut_out, before)
+            # if final list is empty
+            if not final:
+                final.append(max_prob)
+            else:
 
-            # increment index only if no element is deleted
-            if not deleted:
-                index += 1
+                # This leads to no overlapping by checking the last element of the final list which is always sorted
+                if max_prob not in final:
+                    # if max prob is higher then last element of final and in same 34 range then delete old element in final and add new one
+                    if final[-1][1] + 34 > max_prob[1] and final[-1][0] < max_prob[0]:
+                        del final[-1]
+                        final.append(max_prob)
+                    # if max element is more then 34 amino acids distant of the last element in final it can be added
+                    elif final[-1][1] + 34 <= max_prob[1]:
+                        final.append(max_prob)
 
-        # could also use initial findings but new variable makes it more clear here
-        final = pos_sort
+            # oldfit is a list which checks which of the hits in previous iteration fit in after one is deleted in previous step
+            # if final has more then one element the second to last has also to be considered
+            if len(final) > 1:
+                [oldfit.append(x) if x[1] + 34 <= final[-1][1] and final[-2][1] + 32 < x[1] and x not in final else '' for x in old]
+            else:
+                [oldfit.append(x) if x[1] + 34 <= final[-1][1] and x not in final else '' for x in old]
+
+            # if multiple elements could now fit take the one with the highest prob and add it to final
+            if oldfit:
+                max_prob_old_fitting = max(oldfit, key=lambda item: item[0])
+                final.append(max_prob_old_fitting)
+                oldfit_counter += 1
+                print('ADDED BY OLDFIT', max_prob_old_fitting)
+
+            # Sort by position befor next iteration
+            final = sorted(final, key=lambda triple: triple[1])
+
+        # For printing the hits cutted out
+        [cut_out.append(cut) if cut not in final else '' for cut in pos_sort]
+        print(oldfit_counter, 'TPRs ADDED BY MAGIC FILTER METHOD APPROACH')
+
+        # Sort by position
+        final = sorted(final, key=lambda triple: triple[1])
+
         return final, cut_out
 
     @staticmethod
