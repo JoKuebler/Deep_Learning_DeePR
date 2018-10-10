@@ -411,7 +411,7 @@ class DataGetter:
                                 idx = query_seq.index(tpr)
 
                                 # cut out sequence in hit seq on same position
-                                hit_tpr = hit['hsps'][0]['hseq'][idx:idx + 34]
+                                hit_tpr = hit_seq[idx:idx + 34]
 
                                 # collect tpr only if the same was not already found and if it has no gaps
                                 if hit_tpr not in collected_data and '-' not in hit_tpr:
