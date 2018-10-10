@@ -21,9 +21,10 @@ def preprocess(align_object, data_getter_object):
     single_chain_dir = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/single_chain_fasta/'
     hhpred_result_dir = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/HHpred/results/'
     hhpred_querydb_results = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/HHpred/results_querydb/'
+    psiblast_result_dir = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/PSIBlast/results/'
 
     # Containing 1561 Hits from 800 unique PDB structures
-    match_data, pos_data = data_getter_object.read_match_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_dict_full.json')
+    match_data, pos_data = data_getter_object.read_match_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_dict_updated.json')
 
     # data_getter_object.write_pos_data(pos_data)
 
@@ -37,7 +38,9 @@ def preprocess(align_object, data_getter_object):
 
     # data_getter_object.hhpred_init_filter(hhpred_result_dir, match_data)
 
-    confirmed, unconfirmed, final_seqs, final_entries = data_getter_object.check_range(hhpred_querydb_results, match_data)
+    # confirmed, unconfirmed, final_seqs, final_entries = data_getter_object.check_range(hhpred_querydb_results, match_data)
+
+    data_getter_object.get_blast_seqs(psiblast_result_dir, match_data)
 
 
 def network_training(reader_object, encoder_object, conv_object, ref_object, svm):
@@ -134,10 +137,10 @@ if __name__ == '__main__':
 
     # Running
     # Preprocess Data
-    # preprocess(aligner, data_getter)
+    preprocess(aligner, data_getter)
 
     # Train Network
-    network_training(file_read, encoder, conv_net, ref_net, svm)
+    # network_training(file_read, encoder, conv_net, ref_net, svm)
 
 
 

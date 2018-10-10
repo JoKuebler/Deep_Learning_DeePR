@@ -5,6 +5,7 @@ import json
 import subprocess
 from Bio import SeqIO
 from Bio import BiopythonWarning
+
 warnings.simplefilter('ignore', BiopythonWarning)
 
 
@@ -151,7 +152,6 @@ class DataGetter:
 
         for key in match_data:
             for entry in match_data[key]:
-
                 header = str(">" + key + entry["chain"] + '\n')
 
                 output_file.write(header)
@@ -174,9 +174,9 @@ class DataGetter:
         return data, pos_data
 
     @staticmethod
-    def write_pos_data(pos_data_arr):
+    def write_pos_data(pos_data_arr, filename):
 
-        output_file = open('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/new_pos_data.txt', 'w+')
+        output_file = open('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/' + filename + '.txt', 'w+')
 
         for seq in pos_data_arr:
             output_file.write(seq + '\n')
@@ -192,7 +192,6 @@ class DataGetter:
 
         print('FASTA Files to be downloaded: ' + str(len(match_data)))
         for key in match_data:
-
             subprocess.run(['curl', '-o', download_dir + str(key) +
                             '.fasta', 'https://www.rcsb.org/pdb/download/downloadFastaFiles.do?structureIdList=' +
                             str(key) + '&compressionType=uncompressed'])
@@ -223,7 +222,6 @@ class DataGetter:
                         break
 
         for record in final_records:
-
             SeqIO.write(record, output_directory + record.name[0:6].replace(':', '_') + '.fasta', "fasta")
 
     def hhpred_init_filter(self, hhr_results, match_data):
@@ -266,7 +264,7 @@ class DataGetter:
 
                         # If hit is found with a prob higher then 50%
                         if self.identifier in hit['hit'] and int(hit['prob'] > 50.0):
-                                tpr_fam = True
+                            tpr_fam = True
 
                 # Append correct entry to net dict
                 if tpr_fam:
@@ -372,3 +370,54 @@ class DataGetter:
                 unconfirmed.append(file[:-4])
 
         return confirmed, unconfirmed, final_seqs, final_entries
+
+    def get_blast_seqs(self, json_dir, match_data):
+
+        collected_data = []
+
+        # Check all PSI Blast json result files
+        for file in os.listdir(json_dir):
+
+            print(file)
+
+            with open(json_dir + file) as json_file:
+
+                # load json and data
+                data = json.load(json_file)
+                results = data['BlastOutput2'][0]['report']['results']['iterations'][0]['search']
+                query_id = results['query_title'][0:4]
+                chain = results['query_title'][5]
+                hits = results['hits']
+
+                # look at all hits
+                for hit in hits:
+
+                    # sequence of the query
+                    query_seq = hit['hsps'][0]['qseq']
+                    hit_seq = hit['hsps'][0]['hseq']
+
+                    # Check each positive TPR in match_data
+                    for entry in match_data[query_id]:
+
+                        # Has to be same chain
+                        if entry['chain'] == chain:
+                            # tpr of match data
+                            tpr = entry['seq']
+
+                            # if tpr is in query seq of hit then take tpr from hit sequence at same position
+                            if tpr in query_seq:
+
+                                # get position of tpr in query seq
+                                idx = query_seq.index(tpr)
+
+                                # cut out sequence in hit seq on same position
+                                hit_tpr = hit['hsps'][0]['hseq'][idx:idx + 34]
+
+                                # collect tpr only if the same was not already found and if it has no gaps
+                                if hit_tpr not in collected_data and '-' not in hit_tpr:
+                                    collected_data.append(hit_tpr)
+
+                print(len(collected_data))
+                json_file.close()
+
+            self.write_pos_data(collected_data, 'enriched_pos_data.txt')
