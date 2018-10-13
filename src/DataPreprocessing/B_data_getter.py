@@ -3,6 +3,7 @@ import re
 import warnings
 import json
 import subprocess
+import random
 from Bio import SeqIO
 from Bio import BiopythonWarning
 
@@ -174,7 +175,7 @@ class DataGetter:
         return data, pos_data
 
     @staticmethod
-    def write_pos_data(pos_data_arr, filename):
+    def write_data(pos_data_arr, filename):
 
         output_file = open('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/' + filename + '.txt', 'w+')
 
@@ -372,6 +373,13 @@ class DataGetter:
         return confirmed, unconfirmed, final_seqs, final_entries
 
     def get_blast_seqs(self, json_dir, match_data):
+        """
+        After PSI Blast search with all full sequences of initial positive training set this method
+        cuts out the sequence in the hit in the range of the true tpr
+        :param json_dir: Directory of PSIBlast json result files
+        :param match_data: match dictionary
+        :return: writes data array to file
+        """
 
         collected_data = []
 
@@ -420,4 +428,43 @@ class DataGetter:
                 print(len(collected_data))
                 json_file.close()
 
-            self.write_pos_data(collected_data, 'enriched_pos_data.txt')
+            self.write_data(collected_data, 'enriched_pos_data.txt')
+
+    def get_neg_data(self, amount):
+        """
+        Takes scope70 and cuts all non tpr sequences into 34 long peptides
+        :param amount: amount of sequences desired
+        :return: writes data array to file
+        """
+
+        records = list(SeqIO.parse('/ebio/abt1_share/toolkit_sync/databases/hh-suite/scope70/scope70.fas', 'fasta'))
+        collected = []
+        x = 0
+
+        rand_sample = random.sample(range(0, len(records)), len(records))
+
+        # go through all records
+        for rand in rand_sample:
+
+            if len(collected) > amount:
+                break
+
+            # Do not take out of TPR class and sequences smaller then 34 amino acids
+            if '118.8' not in records[rand].description and len(records[rand].seq) > 34:
+
+                i = 0
+
+                while i < len(records[rand].seq)-34:
+
+                    sample = records[rand].seq[i:i+34]
+                    i += 3
+
+                    if sample not in collected:
+                        collected.append(str(sample))
+
+                print(len(collected))
+
+            x += 1
+
+        print(len(collected))
+        self.write_data(collected, 'enriched_neg_data')

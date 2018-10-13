@@ -40,8 +40,11 @@ def preprocess(align_object, data_getter_object):
 
     # confirmed, unconfirmed, final_seqs, final_entries = data_getter_object.check_range(hhpred_querydb_results, match_data)
 
-    data_getter_object.get_blast_seqs(psiblast_result_dir, match_data)
+    # Get enriched BLAST data
+    # data_getter_object.get_blast_seqs(psiblast_result_dir, match_data)
 
+    # Get negative data from scope
+    data_getter_object.get_neg_data(320000)
 
 def network_training(reader_object, encoder_object, conv_object, ref_object, svm):
     """
