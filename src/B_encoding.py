@@ -26,6 +26,7 @@ class Encoder:
         :return: numpy array of encoded sequences
         """
         neg_data = [] if not neg_data else neg_data
+
         # List comprehension to encode fragments after checking for unknown amino acids
         enc_fragments = [self.enc_positions(fragment.rstrip()) if not any(x in fragment for x in self.unknown_aa)
                          else print('ENCODING FAILED FOR ', fragment) for fragment in pos_data + neg_data]

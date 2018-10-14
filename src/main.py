@@ -46,6 +46,7 @@ def preprocess(align_object, data_getter_object):
     # Get negative data from scope
     data_getter_object.get_neg_data(320000)
 
+
 def network_training(reader_object, encoder_object, conv_object, ref_object, svm):
     """
     Trains the network and evaluates parameters
@@ -60,8 +61,8 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
     if args.retrain:
 
         # Get Training Data as list
-        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/pos_data_templatefilter.txt',
-                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/negative_data.txt')
+        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/enriched_pos_data_small.txt',
+                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/enriched_neg_data.txt')
         pos_test, neg_test = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/test_set_pos.txt',
                                                               '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/test_set_neg.txt')
         # Encode Training Data
@@ -140,10 +141,10 @@ if __name__ == '__main__':
 
     # Running
     # Preprocess Data
-    preprocess(aligner, data_getter)
+    # preprocess(aligner, data_getter)
 
     # Train Network
-    # network_training(file_read, encoder, conv_net, ref_net, svm)
+    network_training(file_read, encoder, conv_net, ref_net, svm)
 
 
 

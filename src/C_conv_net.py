@@ -84,7 +84,7 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        self.model.fit(data, target, batch_size=16, epochs=75, shuffle=True, verbose=2)
+        self.model.fit(data, target, batch_size=128, epochs=75, shuffle=True, verbose=2, validation_split=0.2)
 
         # self.plot_loss(history)
         # self.plot_acc(history)
@@ -129,16 +129,17 @@ class ConvolutionalNetwork:
 
         final_predictions, cut_out = self.filter_predictions(top_n, 0.80)
 
-        print('\n\n')
+        print('\n')
         print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
         # show the inputs and predicted outputs
         for i in range(len(final_predictions)):
             print(final_predictions[i][1], final_predictions[i][2], final_predictions[i][1]+33, final_predictions[i][0])
 
-        print('\n\n')
+        print('\n')
         print('Filtered out due to overlapping with higher probabilities')
         for i in range(len(cut_out)):
             print(cut_out[i][1], cut_out[i][2], cut_out[i][1] + 33, cut_out[i][0])
+        print('\n\n')
 
         # For Refine LSTM
         # if seq_id is not None:
@@ -272,8 +273,11 @@ class ConvolutionalNetwork:
         """
 
         final_list = []
+        index_seen = []
         pos_probs = predictions[:, [0][0]].tolist()
         index_getter = pos_probs.copy()
+
+        print(len(pos_probs) == len(set(pos_probs)))
 
         for i in range(0, top):
             max1 = 0
@@ -282,12 +286,30 @@ class ConvolutionalNetwork:
                 if pos_probs[j] > max1:
                     max1 = pos_probs[j]
 
-            final_list.append((max1, index_getter.index(max1) + 1, str(seqs[index_getter.index(max1)])))
-            pos_probs.remove(max1)
+            indices = [i for i, x in enumerate(pos_probs) if x == max1]
+
+            # This solves issue if there are two exact same probabilities
+            # caused by same sequences
+            if len(indices) > 1:
+
+                # To get every position not always the first one
+                for ind in indices:
+                    if ind not in index_seen:
+                        final_list.append((max1, ind + 1, str(seqs[index_getter.index(max1)])))
+                        pos_probs.remove(max1)
+                        index_seen.append(ind)
+                    else:
+                        continue
+
+            # normal case
+            else:
+                final_list.append((max1, index_getter.index(max1) + 1, str(seqs[index_getter.index(max1)])))
+                pos_probs.remove(max1)
 
         return final_list
 
-    def filter_predictions(self, predictions, threshold):
+    @staticmethod
+    def filter_predictions(predictions, threshold):
         """
         Complex method to filter output predictions so no overlapping TPRs are predicted and always the ones with
         the highest probabilities are shown to the user
@@ -306,7 +328,7 @@ class ConvolutionalNetwork:
         # Sort by position
         pos_sort = sorted(init_filter, key=lambda triple: triple[1])
 
-        print('\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
+        print('\n\n')
         print('USING THRESHOLD OF', threshold, 'I FOUND', len(pos_sort), 'POSITIVE HITS')
 
         tmp, final = [], []
