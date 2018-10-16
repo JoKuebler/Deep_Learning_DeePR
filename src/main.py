@@ -6,6 +6,7 @@ from src.E_SVM import SVM
 from src.DataPreprocessing.A_query_aligner import Aligner
 from src.DataPreprocessing.B_data_getter import DataGetter
 import argparse
+import os
 
 
 def preprocess(align_object, data_getter_object):
@@ -93,20 +94,26 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
 
     else:
 
-        # Load model from given directory
-        conv_object.load_model(args.load)
+        network_data = [x[:-5] for x in os.listdir(args.load) if x.endswith('.json')]
 
-        # Read in protein and cut into windows
-        pred_data, seq_ids = reader_object.read_pred_data(args.input, 34, 1)
+        for file_name in network_data:
 
-        for idx, seq_fragments in enumerate(pred_data):
+            print(file_name)
 
-            # Encode input, first argument is pos data and will return pos label vector with same length and second
-            # argument is negative data and will do the same, is None if no negative data is given
-            enc_pred, target = encoder_object.encode(seq_fragments)
+            # Load model from given directory
+            conv_object.load_model(args.load, file_name)
 
-            # To predict F1 score give target as parameter
-            conv_object.predict(seq_fragments, enc_pred, seq_ids[idx])
+            # Read in protein and cut into windows
+            pred_data, seq_ids = reader_object.read_pred_data(args.input, 34, 1)
+
+            for idx, seq_fragments in enumerate(pred_data):
+
+                # Encode input, first argument is pos data and will return pos label vector with same length and second
+                # argument is negative data and will do the same, is None if no negative data is given
+                enc_pred, target = encoder_object.encode(seq_fragments)
+
+                # To predict F1 score give target as parameter
+                conv_object.predict(seq_fragments, enc_pred, seq_ids[idx])
 
 
 if __name__ == '__main__':

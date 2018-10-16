@@ -84,7 +84,7 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        self.model.fit(data, target, batch_size=128, epochs=75, shuffle=True, verbose=2, validation_split=0.2)
+        self.model.fit(data, target, batch_size=128, epochs=25, shuffle=True, verbose=2, validation_split=0.2)
 
         # self.plot_loss(history)
         # self.plot_acc(history)
@@ -109,7 +109,7 @@ class ConvolutionalNetwork:
 
         # Print how many sequences are predicted (windows)
         print('>', seq_id)
-        print(str(len(seqs)) + ' Sequences predicted')
+        print('PREDICTED:', len(seqs))
 
         # Make predictions
         predictions = self.model.predict(enc_seq, batch_size=20, verbose=2)
@@ -127,15 +127,13 @@ class ConvolutionalNetwork:
         # gets passed to final prediction filter
         top_n = self.max_n(predictions, seqs, len(predictions))
 
-        final_predictions, cut_out = self.filter_predictions(top_n, 0.80)
+        final_predictions, cut_out = self.filter_predictions(top_n, 0.50)
 
-        print('\n')
         print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
         # show the inputs and predicted outputs
         for i in range(len(final_predictions)):
             print(final_predictions[i][1], final_predictions[i][2], final_predictions[i][1]+33, final_predictions[i][0])
 
-        print('\n')
         print('Filtered out due to overlapping with higher probabilities')
         for i in range(len(cut_out)):
             print(cut_out[i][1], cut_out[i][2], cut_out[i][1] + 33, cut_out[i][0])
@@ -165,20 +163,20 @@ class ConvolutionalNetwork:
         self.model.save_weights(directory + 'model.h5')
         print('Model Saved to Disk!')
 
-    def load_model(self, directory):
+    def load_model(self, directory, file_name):
         """
         Loads model from json and h5 file in given directory
         :param directory: Directory to load from given via script parameter
         """
 
         # load json and create model
-        json_file = open(directory + 'model.json', 'r')
+        json_file = open(directory + file_name + '.json', 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
 
         # load weights into new model
-        loaded_model.load_weights(directory + 'model.h5')
+        loaded_model.load_weights(directory + file_name + '.h5')
 
         # Set model
         self.model = loaded_model
@@ -277,8 +275,6 @@ class ConvolutionalNetwork:
         pos_probs = predictions[:, [0][0]].tolist()
         index_getter = pos_probs.copy()
 
-        print(len(pos_probs) == len(set(pos_probs)))
-
         for i in range(0, top):
             max1 = 0
 
@@ -296,10 +292,10 @@ class ConvolutionalNetwork:
                 for ind in indices:
                     if ind not in index_seen:
                         final_list.append((max1, ind + 1, str(seqs[index_getter.index(max1)])))
-                        pos_probs.remove(max1)
                         index_seen.append(ind)
                     else:
                         continue
+                pos_probs.remove(max1)
 
             # normal case
             else:
@@ -328,8 +324,8 @@ class ConvolutionalNetwork:
         # Sort by position
         pos_sort = sorted(init_filter, key=lambda triple: triple[1])
 
-        print('\n\n')
-        print('USING THRESHOLD OF', threshold, 'I FOUND', len(pos_sort), 'POSITIVE HITS')
+        print('HITS:', len(pos_sort))
+        print('THRESHOLD:', threshold)
 
         tmp, final = [], []
 
