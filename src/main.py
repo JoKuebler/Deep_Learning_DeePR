@@ -25,7 +25,7 @@ def preprocess(align_object, data_getter_object):
     psiblast_result_dir = '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/PSIBlast/results/'
 
     # Containing 1561 Hits from 800 unique PDB structures
-    match_data, pos_data = data_getter_object.read_match_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_dict_updated.json')
+    match_data, pos_data = data_getter_object.read_match_json('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/match_dict_post_templ_filter.json')
 
     # data_getter_object.write_pos_data(pos_data)
 
@@ -62,10 +62,10 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
     if args.retrain:
 
         # Get Training Data as list
-        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/enriched_pos_data_small.txt',
-                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/enriched_neg_data.txt')
-        pos_test, neg_test = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/test_set_pos.txt',
-                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/test_set_neg.txt')
+        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/enriched_pos_data_clustered.txt',
+                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/enriched_neg_data_clustered.txt')
+        pos_test, neg_test = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/TestSet/test_set_pos.txt',
+                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/TestSet/test_set_neg.txt')
         # Encode Training Data
         enc_data, target = encoder_object.encode(pos_data, neg_data)
         enc_test, target_test = encoder_object.encode(pos_test, neg_test)
@@ -148,10 +148,10 @@ if __name__ == '__main__':
 
     # Running
     # Preprocess Data
-    # preprocess(aligner, data_getter)
+    preprocess(aligner, data_getter)
 
     # Train Network
-    network_training(file_read, encoder, conv_net, ref_net, svm)
+    # network_training(file_read, encoder, conv_net, ref_net, svm)
 
 
 

@@ -84,10 +84,10 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        self.model.fit(data, target, batch_size=128, epochs=25, shuffle=True, verbose=2, validation_split=0.2)
+        history = self.model.fit(data, target, batch_size=128, epochs=25, shuffle=True, verbose=2, validation_split=0.2)
 
-        # self.plot_loss(history)
-        # self.plot_acc(history)
+        self.plot_loss(history)
+        self.plot_acc(history)
 
         outputs = [layer.output for layer in self.model.layers]
         print(outputs)
