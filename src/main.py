@@ -7,6 +7,7 @@ from src.DataPreprocessing.A_query_aligner import Aligner
 from src.DataPreprocessing.B_data_getter import DataGetter
 import argparse
 import os
+from keras.utils import plot_model
 
 
 def preprocess(align_object, data_getter_object):
@@ -45,7 +46,7 @@ def preprocess(align_object, data_getter_object):
     # data_getter_object.get_blast_seqs(psiblast_result_dir, match_data)
 
     # Get negative data from scope
-    data_getter_object.get_neg_data(320000)
+    data_getter_object.get_neg_data(600000)
 
 
 def network_training(reader_object, encoder_object, conv_object, ref_object, svm):
@@ -62,8 +63,8 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
     if args.retrain:
 
         # Get Training Data as list
-        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/enriched_pos_data_clustered.txt',
-                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/enriched_neg_data_clustered.txt')
+        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/pos_stripped.txt',
+                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/neg_stripped.txt')
         pos_test, neg_test = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/TestSet/test_set_pos.txt',
                                                               '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/TestSet/test_set_neg.txt')
         # Encode Training Data
@@ -116,6 +117,11 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
                 conv_object.predict(seq_fragments, enc_pred, seq_ids[idx])
 
 
+def visualize_model(model):
+
+    plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True)
+
+
 if __name__ == '__main__':
 
     # initiate the parser
@@ -148,10 +154,13 @@ if __name__ == '__main__':
 
     # Running
     # Preprocess Data
-    preprocess(aligner, data_getter)
+    # preprocess(aligner, data_getter)
 
     # Train Network
-    # network_training(file_read, encoder, conv_net, ref_net, svm)
+    network_training(file_read, encoder, conv_net, ref_net, svm)
+
+    # Plot model
+    # plot_model(conv_net.model)
 
 
 

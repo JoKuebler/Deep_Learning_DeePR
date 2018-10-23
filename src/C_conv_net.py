@@ -4,7 +4,7 @@ from keras.models import Sequential
 from keras.optimizers import SGD, Adam
 from keras.regularizers import l2
 from keras.models import model_from_json
-from src.B_encoding import Encoder
+from B_encoding import Encoder
 from sklearn.model_selection import StratifiedKFold
 import numpy as np
 import matplotlib.pyplot as plt
@@ -84,7 +84,7 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        history = self.model.fit(data, target, batch_size=128, epochs=25, shuffle=True, verbose=2, validation_split=0.2)
+        history = self.model.fit(data, target, batch_size=128, epochs=20, shuffle=True, verbose=2, validation_split=0.2)
 
         self.plot_loss(history)
         self.plot_acc(history)
@@ -198,7 +198,7 @@ class ConvolutionalNetwork:
         for train, test in kfold.split(data, one_dim_target):
 
             # Fit network to data with parameters: Batch Size, Epochs
-            self.model.fit(data[train], target[train], validation_split=0.1, batch_size=75, epochs=55,
+            self.model.fit(data[train], target[train], validation_split=0.1, batch_size=128, epochs=75,
                            shuffle=True, verbose=2)
 
             # Evaluate model
