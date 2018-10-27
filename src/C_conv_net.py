@@ -4,7 +4,7 @@ from keras.models import Sequential
 from keras.optimizers import SGD, Adam
 from keras.regularizers import l2
 from keras.models import model_from_json
-from B_encoding import Encoder
+from src.B_encoding import Encoder
 from sklearn.model_selection import StratifiedKFold
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,15 +15,16 @@ class ConvolutionalNetwork:
     def __init__(self):
 
         # Define input layer
-        self.input_layer = Conv1D(96, 9, padding='valid', kernel_regularizer=l2(0.01), input_shape=(34, 20))
+        self.input_layer = Conv1D(96, 9, padding='same', kernel_regularizer=l2(0.01), input_shape=(34, 20))
 
         # Define optimizer
-        # self.optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
-        self.optimizer = SGD(lr=0.005, momentum=0.9, nesterov=False)
+        self.optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+        # self.optimizer = SGD(lr=0.005, momentum=0.9, nesterov=False)
 
         # Define model including layers and activation functions
         self.model = Sequential([
             self.input_layer,
+            Dropout(0.5),
             MaxPooling1D(pool_size=2),
             Conv1D(128, 9, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
             MaxPooling1D(pool_size=2),
@@ -31,14 +32,27 @@ class ConvolutionalNetwork:
             MaxPooling1D(pool_size=2),
             Conv1D(512, 8, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
             MaxPooling1D(pool_size=2),
-            Conv1D(1024, 3, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
+            Conv1D(256, 3, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
             MaxPooling1D(pool_size=1),
             Conv1D(144, 1, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
             GlobalMaxPooling1D(),
-            Dropout(0.1),
+            Dropout(0.25),
             Dense(2, activation='softmax', name='output_layer')
         ])
 
+        # Deep Coil architecture
+        # self.model = Sequential([
+        #     self.input_layer,
+        #     Conv1D(64, 9, padding='same', activation='relu', kernel_regularizer=l2(0.0001)),
+        #     Dropout(0.5),
+        #     Conv1D(64, 3, padding='same', activation='relu', kernel_regularizer=l2(0.0001)),
+        #     GlobalMaxPooling1D(),
+        #     Dense(128),
+        #     Dropout(0.25),
+        #     Dense(2, activation='softmax', name='output_layer')
+        # ])
+
+        # Google architecture
         # self.model = Sequential([
         #     self.input_layer,
         #     Conv1D(64, 9, strides=1, padding='same', activation='relu'),
@@ -115,8 +129,8 @@ class ConvolutionalNetwork:
         predictions = self.model.predict(enc_seq, batch_size=20, verbose=2)
 
         # show the inputs and predicted outputs
-        for i in range(len(seqs)):
-            print(i+1, seqs[i], predictions[i])
+        # for i in range(len(seqs)):
+        #     print(i+1, seqs[i], predictions[i])
 
         if target is not None:
             # To calculate F1 score target has to be given
@@ -127,7 +141,7 @@ class ConvolutionalNetwork:
         # gets passed to final prediction filter
         top_n = self.max_n(predictions, seqs, len(predictions))
 
-        final_predictions, cut_out = self.filter_predictions(top_n, 0.50)
+        final_predictions, cut_out = self.filter_predictions(top_n, 0.8)
 
         print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
         # show the inputs and predicted outputs
@@ -146,7 +160,7 @@ class ConvolutionalNetwork:
         # else:
         #     padded_refine_data, target_vector = [], []
 
-        return predictions
+        return len(final_predictions)
         # padded_refine_data, target_vector
 
     def save_model(self, directory):

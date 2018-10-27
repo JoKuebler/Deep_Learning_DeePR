@@ -99,22 +99,28 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
 
         for file_name in network_data:
 
-            print(file_name)
+            if 'sgd-' in file_name:
 
-            # Load model from given directory
-            conv_object.load_model(args.load, file_name)
+                hits = 0
 
-            # Read in protein and cut into windows
-            pred_data, seq_ids = reader_object.read_pred_data(args.input, 34, 1)
+                print(file_name)
 
-            for idx, seq_fragments in enumerate(pred_data):
+                # Load model from given directory
+                conv_object.load_model(args.load, file_name)
 
-                # Encode input, first argument is pos data and will return pos label vector with same length and second
-                # argument is negative data and will do the same, is None if no negative data is given
-                enc_pred, target = encoder_object.encode(seq_fragments)
+                # Read in protein and cut into windows
+                pred_data, seq_ids = reader_object.read_pred_data(args.input, 34, 1)
 
-                # To predict F1 score give target as parameter
-                conv_object.predict(seq_fragments, enc_pred, seq_ids[idx])
+                for idx, seq_fragments in enumerate(pred_data):
+
+                    # Encode input, first argument is pos data and will return pos label vector with same length and second
+                    # argument is negative data and will do the same, is None if no negative data is given
+                    enc_pred, target = encoder_object.encode(seq_fragments)
+
+                    # To predict F1 score give target as parameter
+                    no_found = conv_object.predict(seq_fragments, enc_pred, seq_ids[idx])
+                    hits += no_found
+                    print('TOTAL FOUND: ', hits)
 
 
 def visualize_model(model):
