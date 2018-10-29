@@ -141,7 +141,7 @@ class ConvolutionalNetwork:
         # gets passed to final prediction filter
         top_n = self.max_n(predictions, seqs, len(predictions))
 
-        final_predictions, cut_out = self.filter_predictions(top_n, 0.8)
+        final_predictions, cut_out = self.filter_predictions(top_n, 0.9)
 
         print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
         # show the inputs and predicted outputs
@@ -373,7 +373,7 @@ class ConvolutionalNetwork:
             # oldfit is a list which checks which of the hits in previous iteration fit in after one is deleted in previous step
             # if final has more then one element the second to last has also to be considered
             if len(final) > 1:
-                [oldfit.append(x) if x[1] + 34 <= final[-1][1] and final[-2][1] + 32 < x[1] and x not in final else '' for x in old]
+                [oldfit.append(x) if x[1] + 34 <= final[-1][1] and final[-2][1] + 34 < x[1] and x not in final else '' for x in old]
             else:
                 [oldfit.append(x) if x[1] + 34 <= final[-1][1] and x not in final else '' for x in old]
 
