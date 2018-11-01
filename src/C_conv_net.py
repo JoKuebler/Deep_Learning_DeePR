@@ -6,6 +6,7 @@ from keras.regularizers import l2
 from keras.models import model_from_json
 from src.B_encoding import Encoder
 from sklearn.model_selection import StratifiedKFold
+from src.F_callbacks import Histories
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -18,8 +19,8 @@ class ConvolutionalNetwork:
         self.input_layer = Conv1D(96, 9, padding='same', kernel_regularizer=l2(0.01), input_shape=(34, 20))
 
         # Define optimizer
-        self.optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
-        # self.optimizer = SGD(lr=0.005, momentum=0.9, nesterov=False)
+        # self.optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+        self.optimizer = SGD(lr=0.0005, momentum=0.9, nesterov=False)
 
         # Define model including layers and activation functions
         self.model = Sequential([
@@ -32,54 +33,14 @@ class ConvolutionalNetwork:
             MaxPooling1D(pool_size=2),
             Conv1D(512, 8, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
             MaxPooling1D(pool_size=2),
-            Conv1D(256, 3, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
+            Conv1D(1024, 3, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
             MaxPooling1D(pool_size=1),
             Conv1D(144, 1, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
             GlobalMaxPooling1D(),
+            Dense(128),
             Dropout(0.25),
             Dense(2, activation='softmax', name='output_layer')
         ])
-
-        # Deep Coil architecture
-        # self.model = Sequential([
-        #     self.input_layer,
-        #     Conv1D(64, 9, padding='same', activation='relu', kernel_regularizer=l2(0.0001)),
-        #     Dropout(0.5),
-        #     Conv1D(64, 3, padding='same', activation='relu', kernel_regularizer=l2(0.0001)),
-        #     GlobalMaxPooling1D(),
-        #     Dense(128),
-        #     Dropout(0.25),
-        #     Dense(2, activation='softmax', name='output_layer')
-        # ])
-
-        # Google architecture
-        # self.model = Sequential([
-        #     self.input_layer,
-        #     Conv1D(64, 9, strides=1, padding='same', activation='relu'),
-        #     BatchNormalization(),
-        #     MaxPooling1D(pool_size=3, strides=2, padding='same'),
-        #     Conv1D(128, 9, strides=1, padding='same', activation='relu'),
-        #     BatchNormalization(),
-        #     MaxPooling1D(pool_size=3, strides=2, padding='same'),
-        #     Conv1D(256, 8, strides=1, padding='same', activation='relu'),
-        #     BatchNormalization(),
-        #     Conv1D(256, 3, strides=1, padding='same', activation='relu'),
-        #     BatchNormalization(),
-        #     MaxPooling1D(pool_size=3, strides=2, padding='same'),
-        #     Conv1D(512, 3, strides=1, padding='same', activation='relu'),
-        #     BatchNormalization(),
-        #     Conv1D(512, 3, strides=1, padding='same', activation='relu'),
-        #     BatchNormalization(),
-        #     MaxPooling1D(pool_size=3, strides=2, padding='same'),
-        #     Conv1D(1024, 3, strides=1, padding='same', activation='relu'),
-        #     BatchNormalization(),
-        #     Conv1D(1024, 1, strides=1, padding='same', activation='relu'),
-        #     BatchNormalization(),
-        #     MaxPooling1D(pool_size=3, strides=2, padding='same'),
-        #     AveragePooling1D(pool_size=1, strides=1, padding='valid'),
-        #     GlobalMaxPooling1D(),
-        #     Dense(2, activation='softmax', name='output_layer')
-        # ])
 
         self.encoder = Encoder()
 
@@ -94,11 +55,18 @@ class ConvolutionalNetwork:
 
         # Model needs to be compiled before training
         self.model.compile(loss='binary_crossentropy', optimizer=self.optimizer, metrics=['accuracy'])
+
+        # prepare callback
+        histories = Histories()
+
         # Overview over model
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        history = self.model.fit(data, target, batch_size=128, epochs=20, shuffle=True, verbose=2, validation_split=0.2)
+        history = self.model.fit(data, target, batch_size=256, epochs=2, shuffle=True, verbose=2, validation_split=0.1, callbacks=[histories])
+
+        print(histories.losses)
+        print(histories.aucs)
 
         self.plot_loss(history)
         self.plot_acc(history)
@@ -136,12 +104,9 @@ class ConvolutionalNetwork:
             # To calculate F1 score target has to be given
             self.f1_score(0.9, predictions, target)
 
-        # sort according to max N probs
-        # len(predictions) stores all predictions in a nice way (prob, pos, seq)
-        # gets passed to final prediction filter
+        # sort according to max N probs; len(predictions) stores all predictions in a nice way (prob, pos, seq);gets passed to final prediction filter
         top_n = self.max_n(predictions, seqs, len(predictions))
-
-        final_predictions, cut_out = self.filter_predictions(top_n, 0.9)
+        final_predictions, cut_out = self.filter_predictions(top_n, 0.5)
 
         print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
         # show the inputs and predicted outputs
@@ -228,11 +193,10 @@ class ConvolutionalNetwork:
     def plot_loss(history):
 
         plt.plot(history.history['loss'])
-        plt.plot(history.history['val_loss'])
         plt.title('model loss')
         plt.ylabel('loss')
         plt.xlabel('epoch')
-        plt.legend(['train', 'validation'], loc='upper left')
+        plt.legend(['train'], loc='upper left')
         plt.show()
 
     @staticmethod
