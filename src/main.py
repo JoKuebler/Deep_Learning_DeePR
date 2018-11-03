@@ -65,22 +65,25 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
     if args.retrain:
 
         # Get Training Data as list
-        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/pos_stripped.txt',
-                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/neg_stripped.txt')
-        pos_test, neg_test = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/TestSet/test_set_pos.txt',
-                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/TestSet/test_set_neg.txt')
+        pos_data, neg_data = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/JanekData/train_pos.txt',
+                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/JanekData/train_neg.txt')
+        pos_val, neg_val = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/JanekData/valid_pos.txt',
+                                                            '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/JanekData/valid_neg.txt')
+        pos_test, neg_test = reader_object.read_training_data('/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/JanekData/test_pos.txt',
+                                                              '/ebio/abt1_share/update_tprpred/data/Convolutional/TrainingData/training_sets/JanekData/test_neg.txt')
         # Encode Training Data
         enc_data, target = encoder_object.encode(pos_data, neg_data)
+        enc_val, target_val = encoder_object.encode(pos_val, neg_val)
         enc_test, target_test = encoder_object.encode(pos_test, neg_test)
 
-        # Shuffle data but keep labels
+        # Shuffle training but keep labels in order
         indices = np.arange(enc_data.shape[0])
         np.random.shuffle(indices)
         shuf_enc = enc_data[indices]
         shuf_target = target[indices]
 
         # Train network or SVM
-        conv_object.train_network(shuf_enc, shuf_target, enc_test, target_test)
+        conv_object.train_network(shuf_enc, shuf_target, enc_val, target_val, enc_test, target_test)
         # svm.train_svm(enc_data, target)
 
         # conv_object.cross_validate(enc_data, target)

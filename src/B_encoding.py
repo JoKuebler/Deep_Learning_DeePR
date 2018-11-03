@@ -71,8 +71,8 @@ class Encoder:
         """
 
         # define zero vector
-        zero_vector = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        zero_vector = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         current_vector = zero_vector.copy()
 
@@ -83,7 +83,7 @@ class Encoder:
         for aminoAcid in fragment:
 
             # find index in amino acid array and set char at index to 1
-            current_vector[self.amino_acids.index(aminoAcid.upper())] = 1.0
+            current_vector[self.amino_acids.index(aminoAcid.upper())] = 1
             # current_vector[len(zero_vector) - 1] = self.side_chain_volume[self.amino_acids.index(aminoAcid.upper())]
             # current_vector[len(zero_vector) - 2] = self.hydrophobicity[self.amino_acids.index(aminoAcid.upper())]
 

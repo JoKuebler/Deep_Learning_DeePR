@@ -44,7 +44,7 @@ class ConvolutionalNetwork:
 
         self.encoder = Encoder()
 
-    def train_network(self, data, target, test_data=None, test_target=None):
+    def train_network(self, data, target, val_data, val_target, test_data=None, test_target=None):
         """
         Training of the network
         :param data: Positive and negative training data
@@ -63,7 +63,7 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        history = self.model.fit(data, target, batch_size=256, epochs=35, shuffle=True, verbose=2, validation_split=0.1, callbacks=[histories])
+        history = self.model.fit(data, target, batch_size=256, epochs=70, shuffle=True, verbose=2, validation_data=[val_data, val_target], callbacks=[histories])
 
         self.plot_loss(history)
         self.plot_acc(history)
@@ -72,7 +72,7 @@ class ConvolutionalNetwork:
         print(outputs)
 
         # Evaluate model and print results
-        scores = self.model.evaluate(test_data, test_target)
+        scores = self.model.evaluate(x=test_data, y=test_target)
         print("\n%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
         print('[ERROR,ACCURACY]', scores)
 
