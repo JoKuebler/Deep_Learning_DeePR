@@ -7,6 +7,8 @@ from src.DataPreprocessing.A_query_aligner import Aligner
 from src.DataPreprocessing.B_data_getter import DataGetter
 import argparse
 import os
+import time
+import numpy as np
 from keras.utils import plot_model
 
 
@@ -71,8 +73,14 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
         enc_data, target = encoder_object.encode(pos_data, neg_data)
         enc_test, target_test = encoder_object.encode(pos_test, neg_test)
 
+        # Shuffle data but keep labels
+        indices = np.arange(enc_data.shape[0])
+        np.random.shuffle(indices)
+        shuf_enc = enc_data[indices]
+        shuf_target = target[indices]
+
         # Train network or SVM
-        conv_object.train_network(enc_data, target, enc_test, target_test)
+        conv_object.train_network(shuf_enc, shuf_target, enc_test, target_test)
         # svm.train_svm(enc_data, target)
 
         # conv_object.cross_validate(enc_data, target)
@@ -95,30 +103,40 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
 
     else:
 
+        start_time = time.time()
         network_data = [x[:-5] for x in os.listdir(args.load) if x.endswith('.json')]
 
         for file_name in network_data:
 
-            hits = 0
+            if 'sgd-75' in file_name:
 
-            print(file_name)
+                hits = 0
 
-            # Load model from given directory
-            conv_object.load_model(args.load, file_name)
+                print(file_name)
 
-            # Read in protein and cut into windows
-            pred_data, seq_ids = reader_object.read_pred_data(args.input, 34, 1)
+                # Load model from given directory
+                conv_object.load_model(args.load, file_name)
+                print("--- %s seconds ---" % (time.time() - start_time))
 
-            for idx, seq_fragments in enumerate(pred_data):
+                # Read in protein and cut into windows
+                pred_data, seq_ids = reader_object.read_pred_data(args.input, 34, 1)
+                print(" READING IN --- %s seconds ---" % (time.time() - start_time))
 
-                # Encode input, first argument is pos data and will return pos label vector with same length and second
-                # argument is negative data and will do the same, is None if no negative data is given
-                enc_pred, target = encoder_object.encode(seq_fragments)
+                # to save memory input proteins are predicted in chunks of 100
+                chunks = [pred_data[x:x+100] for x in range(0, len(pred_data), 100)]
 
-                # To predict F1 score give target as parameter
-                no_found = conv_object.predict(seq_fragments, enc_pred, seq_ids[idx])
-                hits += no_found
-            print('TOTAL FOUND: ', hits)
+                for chunk in chunks:
+
+                    # Encode input, first argument is pos data and will return pos label vector with same length and second
+                    # argument is negative data and will do the same, is None if no negative data is given
+                    enc_pred, pro_len = encoder_object.encode_predictions(chunk)
+                    print("ENCODING --- %s seconds ---" % (time.time() - start_time))
+
+                    # To predict F1 score give target as parameter
+                    no_found = conv_object.predict(chunk, enc_pred, pro_len, seq_ids)
+                    print("PREDICTION --- %s seconds ---" % (time.time() - start_time))
+                    hits += no_found
+                print('TOTAL FOUND: ', hits)
 
 
 def visualize_model(model):

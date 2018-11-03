@@ -35,6 +35,34 @@ class Encoder:
 
         return np.asarray(enc_fragments), target_vector
 
+    def encode_predictions(self, pred_data):
+        """
+        Encode input proteins in chunks
+        :param pred_data: list of lists containing fragments for each input protein
+        :return:
+        """
+
+        # all encoded fragments
+        enc_seq = []
+        # fragments per protein for output generation
+        pro_len = []
+
+        # for each list of fragments of one protein encode it
+        for seq_fragments in pred_data:
+
+            # List comprehension to encode fragments after checking for unknown amino acids
+            enc_fragments = [self.enc_positions(fragment.rstrip()) if not any(x in fragment for x in self.unknown_aa)
+                             else print('ENCODING FAILED FOR ', fragment) for fragment in seq_fragments]
+
+            # store amount of fragments
+            pro_length = len(enc_fragments)
+            pro_len.append(pro_length)
+
+            # append fragments to total list which will be predicted later
+            enc_seq.extend(enc_fragments)
+
+        return np.asarray(enc_seq), pro_len
+
     def enc_positions(self, fragment):
         """
         Encodes sequences into 34x20 vector

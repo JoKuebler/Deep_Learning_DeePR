@@ -20,7 +20,7 @@ class ConvolutionalNetwork:
 
         # Define optimizer
         # self.optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
-        self.optimizer = SGD(lr=0.0005, momentum=0.9, nesterov=False)
+        self.optimizer = SGD(lr=0.0001, momentum=0.9, nesterov=False)
 
         # Define model including layers and activation functions
         self.model = Sequential([
@@ -63,10 +63,7 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        history = self.model.fit(data, target, batch_size=256, epochs=2, shuffle=True, verbose=2, validation_split=0.1, callbacks=[histories])
-
-        print(histories.losses)
-        print(histories.aucs)
+        history = self.model.fit(data, target, batch_size=256, epochs=35, shuffle=True, verbose=2, validation_split=0.1, callbacks=[histories])
 
         self.plot_loss(history)
         self.plot_acc(history)
@@ -79,54 +76,50 @@ class ConvolutionalNetwork:
         print("\n%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
         print('[ERROR,ACCURACY]', scores)
 
-    def predict(self, seqs, enc_seq, seq_id, target=None, chain_id=None):
+    def predict(self, chunk, enc_seq, pro_length, seq_id):
         """
         Predict encoded sequences
-        :param seqs: Raw sequences for output later
+        :param chunk: First part of raw sequences for output later
         :param enc_seq: Encoded sequences to predict
-        :param seq_id: Sequence ID to find the true TPR in the tpr json for target vector
-        :param chain_id: Chain ID to find the true TPR in the tpr json for target vector
+        :param pro_length: lengths of input proteins in order to map back to sequences
+        :param seq_id: to output name/id of sequence predicted
         :return: Return predictions of CNN as well as padded data vector and target vector for refinement network
         """
 
-        # Print how many sequences are predicted (windows)
-        print('>', seq_id)
-        print('PREDICTED:', len(seqs))
-
         # Make predictions
-        predictions = self.model.predict(enc_seq, batch_size=20, verbose=2)
+        predictions = self.model.predict(enc_seq, batch_size=512, verbose=2)
+        pred_per_chunk = 0
+
+        start = 0
 
         # show the inputs and predicted outputs
-        # for i in range(len(seqs)):
-        #     print(i+1, seqs[i], predictions[i])
+        for i in range(len(pro_length)):
 
-        if target is not None:
-            # To calculate F1 score target has to be given
-            self.f1_score(0.9, predictions, target)
+            cur_prot = predictions[start:start+pro_length[i]]
 
-        # sort according to max N probs; len(predictions) stores all predictions in a nice way (prob, pos, seq);gets passed to final prediction filter
-        top_n = self.max_n(predictions, seqs, len(predictions))
-        final_predictions, cut_out = self.filter_predictions(top_n, 0.5)
+            print('>', seq_id[i])
+            print('PREDICTED:', len(cur_prot))
 
-        print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
-        # show the inputs and predicted outputs
-        for i in range(len(final_predictions)):
-            print(final_predictions[i][1], final_predictions[i][2], final_predictions[i][1]+33, final_predictions[i][0])
+            top_n = self.max_n(cur_prot, chunk[i], len(cur_prot))
+            final_predictions, cut_out = self.filter_predictions(top_n, 0.9)
+            pred_per_chunk += len(final_predictions)
 
-        print('Filtered out due to overlapping with higher probabilities')
-        for i in range(len(cut_out)):
-            print(cut_out[i][1], cut_out[i][2], cut_out[i][1] + 33, cut_out[i][0])
-        print('\n\n')
+            print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
+            for x in range(len(final_predictions)):
+                print(final_predictions[x][1], final_predictions[x][2], final_predictions[x][1]+33, final_predictions[x][0])
 
-        # For Refine LSTM
-        # if seq_id is not None:
-        #     # for each prediction made by the CNN pass the data to encode it for the refinement network
-        #     padded_refine_data, target_vector = self.encoder.create_refine_data(predictions, seq_id, chain_id)
-        # else:
-        #     padded_refine_data, target_vector = [], []
+            print('Filtered out due to overlapping with higher probabilities')
+            for c in range(len(cut_out)):
+                print(cut_out[c][1], cut_out[c][2], cut_out[c][1] + 33, cut_out[c][0])
+            print('\n\n')
 
-        return len(final_predictions)
-        # padded_refine_data, target_vector
+            # To print all probabilities
+            for idx, elem in enumerate(cur_prot):
+                print(idx+1, chunk[i][idx], elem)
+
+            start = start + pro_length[i]
+
+        return pred_per_chunk
 
     def save_model(self, directory):
         """
@@ -209,36 +202,6 @@ class ConvolutionalNetwork:
         plt.legend(['train'], loc='upper left')
         plt.show()
 
-    # Implemented so that the validation set is given via input to predict
-    def f1_score(self, threshold, predictions, labels):
-        """
-        Calculates the F1 score for validation set
-        :param threshold:
-        :param predictions:
-        :param labels:
-        :return:
-        """
-
-        tp = predictions[:, 0] > threshold
-
-        one_dim_target = [1 if x[0] == 1 else 0 for x in labels]
-
-        tp_count = 0
-        fp_count = 0
-        fn_count = 0
-
-        for index, elem in enumerate(tp):
-            if tp[index] == one_dim_target[index] and elem:
-                tp_count += 1
-            elif tp[index] != one_dim_target[index] and not elem:
-                fn_count += 1
-            elif tp[index] != one_dim_target[index] and elem:
-                fp_count += 1
-
-        f1 = (2 * tp_count)/(2 * tp_count + fn_count)
-
-        print('F1 Score: ', f1)
-
     @staticmethod
     def max_n(predictions, seqs, top):
         """
@@ -302,9 +265,6 @@ class ConvolutionalNetwork:
         # Sort by position
         pos_sort = sorted(init_filter, key=lambda triple: triple[1])
 
-        print('HITS:', len(pos_sort))
-        print('THRESHOLD:', threshold)
-
         tmp, final = [], []
 
         # For all hits which survive the threshold
@@ -346,17 +306,20 @@ class ConvolutionalNetwork:
                 max_prob_old_fitting = max(oldfit, key=lambda item: item[0])
                 final.append(max_prob_old_fitting)
                 oldfit_counter += 1
-                print('ADDED BY OLDFIT', max_prob_old_fitting)
+                #print('ADDED BY OLDFIT', max_prob_old_fitting)
 
             # Sort by position befor next iteration
             final = sorted(final, key=lambda triple: triple[1])
 
         # For printing the hits cutted out
         [cut_out.append(cut) if cut not in final else '' for cut in pos_sort]
-        print(oldfit_counter, 'TPRs ADDED BY MAGIC FILTER METHOD APPROACH')
+        #print(oldfit_counter, 'TPRs ADDED BY MAGIC FILTER METHOD APPROACH')
 
         # Sort by position
         final = sorted(final, key=lambda triple: triple[1])
+
+        # print('HITS:', len(final))
+        # print('THRESHOLD:', threshold)
 
         return final, cut_out
 
