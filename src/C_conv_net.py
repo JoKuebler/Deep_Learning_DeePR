@@ -76,9 +76,10 @@ class ConvolutionalNetwork:
         print("\n%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
         print('[ERROR,ACCURACY]', scores)
 
-    def predict(self, chunk, enc_seq, pro_length, seq_id):
+    def predict(self, output_file, chunk, enc_seq, pro_length, seq_id):
         """
         Predict encoded sequences
+        :param output_file: file to store output
         :param chunk: First part of raw sequences for output later
         :param enc_seq: Encoded sequences to predict
         :param pro_length: lengths of input proteins in order to map back to sequences
@@ -89,7 +90,6 @@ class ConvolutionalNetwork:
         # Make predictions
         predictions = self.model.predict(enc_seq, batch_size=512, verbose=2)
         pred_per_chunk = 0
-
         start = 0
 
         # show the inputs and predicted outputs
@@ -99,23 +99,34 @@ class ConvolutionalNetwork:
 
             print('>', seq_id[i])
             print('PREDICTED:', len(cur_prot))
+            output_file.write('>' + str(seq_id[i]) + '\n')
+            output_file.write('PREDICTED:' + str(len(cur_prot)) + '\n')
 
             top_n = self.max_n(cur_prot, chunk[i], len(cur_prot))
-            final_predictions, cut_out = self.filter_predictions(top_n, 0.9)
+            final_predictions, cut_out = self.filter_predictions(top_n, 0.8)
             pred_per_chunk += len(final_predictions)
 
-            print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
+            # print('HITS: ', len(final_predictions))
+            output_file.write('HITS: ' + str(len(final_predictions)) + '\n')
+
+            # print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
+            output_file.write('Start\t\t' + 'Sequence\t\t\t\t' + 'End\t\t' + 'Probability\n')
             for x in range(len(final_predictions)):
                 print(final_predictions[x][1], final_predictions[x][2], final_predictions[x][1]+33, final_predictions[x][0])
+                output_file.write(str(final_predictions[x][1]) + '\t' + str(final_predictions[x][2]) + '\t' + str(final_predictions[x][1] + 33) + '\t' + str(final_predictions[x][0]) + '\n')
 
-            print('Filtered out due to overlapping with higher probabilities')
+            # print('Filtered out due to overlapping with higher probabilities')
+            output_file.write('Filtered out due to overlapping with higher probabilities\n')
             for c in range(len(cut_out)):
-                print(cut_out[c][1], cut_out[c][2], cut_out[c][1] + 33, cut_out[c][0])
-            print('\n\n')
+                # print(cut_out[c][1], cut_out[c][2], cut_out[c][1] + 33, cut_out[c][0])
+                output_file.write(str(cut_out[c][1]) + '\t' + str(cut_out[c][2]) + '\t' + str(cut_out[c][1] + 33) + '\t' + str(cut_out[c][0]) + '\n')
+            # print('\n\n')
 
+            output_file.write('REST\n')
             # To print all probabilities
             for idx, elem in enumerate(cur_prot):
-                print(idx+1, chunk[i][idx], elem)
+                # print(idx+1, chunk[i][idx], elem)
+                output_file.write(str(idx + 1) + '\t' + str(chunk[i][idx]) + '\t' + str(elem) + '\n')
 
             start = start + pro_length[i]
 

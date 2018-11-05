@@ -93,17 +93,6 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
 
         # conv_object.load_model(args.retrain)
 
-        # Read in protein and cut into windows
-        pred_data, seq_ids = reader_object.read_pred_data(args.input, 34, 1)
-
-        for idx, seq_fragments in enumerate(pred_data):
-
-            # Encode input
-            enc_pred, target = encoder_object.encode(seq_fragments)
-
-            conv_object.predict(seq_fragments, enc_pred, seq_ids[idx], target)
-            # svm.predict(seq_fragments, enc_pred, seq_ids[idx], target)
-
     else:
 
         start_time = time.time()
@@ -111,35 +100,39 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
 
         for file_name in network_data:
 
-            if 'sgd-75' in file_name:
+                output_file = open(args.input + '_' + str(file_name) + '_predictions.out', "w")
 
                 hits = 0
 
                 print(file_name)
+                output_file.write(file_name + '\n')
 
                 # Load model from given directory
                 conv_object.load_model(args.load, file_name)
-                print("--- %s seconds ---" % (time.time() - start_time))
+                # print("--- %s seconds ---" % (time.time() - start_time))
 
                 # Read in protein and cut into windows
                 pred_data, seq_ids = reader_object.read_pred_data(args.input, 34, 1)
-                print(" READING IN --- %s seconds ---" % (time.time() - start_time))
+                # print(" READING IN --- %s seconds ---" % (time.time() - start_time))
 
                 # to save memory input proteins are predicted in chunks of 100
-                chunks = [pred_data[x:x+100] for x in range(0, len(pred_data), 100)]
+                chunks = [pred_data[x:x+250] for x in range(0, len(pred_data), 250)]
+                seq_ids_chunks = [seq_ids[x:x+250] for x in range(0, len(seq_ids), 250)]
 
-                for chunk in chunks:
+                for idx, chunk in enumerate(chunks):
 
                     # Encode input, first argument is pos data and will return pos label vector with same length and second
                     # argument is negative data and will do the same, is None if no negative data is given
                     enc_pred, pro_len = encoder_object.encode_predictions(chunk)
-                    print("ENCODING --- %s seconds ---" % (time.time() - start_time))
+                    # print("ENCODING --- %s seconds ---" % (time.time() - start_time))
 
                     # To predict F1 score give target as parameter
-                    no_found = conv_object.predict(chunk, enc_pred, pro_len, seq_ids)
-                    print("PREDICTION --- %s seconds ---" % (time.time() - start_time))
+                    no_found = conv_object.predict(output_file, chunk, enc_pred, pro_len, seq_ids_chunks[idx])
+                    # print("PREDICTION --- %s seconds ---" % (time.time() - start_time))
                     hits += no_found
-                print('TOTAL FOUND: ', hits)
+                print(file_name, ' TOTAL FOUND: ', hits)
+                output_file.write(str(file_name) + 'TOTAL FOUND: ' + str(hits))
+                print('----------------------------------')
 
 
 def visualize_model(model):
