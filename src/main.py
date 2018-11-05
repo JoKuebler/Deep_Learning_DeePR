@@ -178,7 +178,7 @@ if __name__ == '__main__':
     network_training(file_read, encoder, conv_net, ref_net, svm)
 
     # Plot model
-    # plot_model(conv_net.model)
+    visualize_model(conv_net.model)
 
 
 
