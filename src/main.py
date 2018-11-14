@@ -5,10 +5,12 @@ from src.D_refine_net import RefinementNetwork
 from src.E_SVM import SVM
 from src.DataPreprocessing.A_query_aligner import Aligner
 from src.DataPreprocessing.B_data_getter import DataGetter
+from sklearn import metrics
 import argparse
 import os
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 from keras.utils import plot_model
 
 
@@ -88,9 +90,6 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
 
         # conv_object.cross_validate(enc_data, target)
 
-        # Store model in given directory
-        conv_object.save_model(args.retrain)
-
         # conv_object.load_model(args.retrain)
 
     else:
@@ -100,9 +99,12 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
 
         for file_name in network_data:
 
+            if 'final_best_big' in file_name:
+
                 output_file = open(args.input + '_' + str(file_name) + '_predictions.out', "w")
 
                 hits = 0
+                total_pred = []
 
                 print(file_name)
                 output_file.write(file_name + '\n')
@@ -116,8 +118,8 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
                 # print(" READING IN --- %s seconds ---" % (time.time() - start_time))
 
                 # to save memory input proteins are predicted in chunks of 100
-                chunks = [pred_data[x:x+250] for x in range(0, len(pred_data), 250)]
-                seq_ids_chunks = [seq_ids[x:x+250] for x in range(0, len(seq_ids), 250)]
+                chunks = [pred_data[x:x+150] for x in range(0, len(pred_data), 150)]
+                seq_ids_chunks = [seq_ids[x:x+150] for x in range(0, len(seq_ids), 150)]
 
                 for idx, chunk in enumerate(chunks):
 
@@ -127,17 +129,44 @@ def network_training(reader_object, encoder_object, conv_object, ref_object, svm
                     # print("ENCODING --- %s seconds ---" % (time.time() - start_time))
 
                     # To predict F1 score give target as parameter
-                    no_found = conv_object.predict(output_file, chunk, enc_pred, pro_len, seq_ids_chunks[idx])
+                    no_found, predictions = conv_object.predict(output_file, chunk, enc_pred, pro_len, seq_ids_chunks[idx])
                     # print("PREDICTION --- %s seconds ---" % (time.time() - start_time))
                     hits += no_found
+                    total_pred.extend(predictions[:, 0])
+
                 print(file_name, ' TOTAL FOUND: ', hits)
                 output_file.write(str(file_name) + 'TOTAL FOUND: ' + str(hits))
                 print('----------------------------------')
+                # roc_plot(total_pred)
 
 
 def visualize_model(model):
 
     plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True)
+
+
+def roc_plot(array):
+
+    # Create positive target vector
+    target_pos = [1] * 13539
+    target_neg = [0] * 12914
+    target_fin = target_pos + target_neg
+
+    fpr, tpr, thresholds = metrics.roc_curve(target_fin, array)
+    roc_auc = metrics.auc(fpr, tpr)
+    print('ROC AUC', roc_auc)
+
+    fig, ax = plt.subplots()
+    x = fpr
+    y = tpr
+    ax.plot(x,y, 'r')
+    ax.grid(True)
+    ax.set_xlabel('False Positive Rate or (1 - Specifity)')
+    ax.set_ylabel('True Positive Rate or (Sensitivity)')
+    ax.margins(0.05)
+    plt.title('Receiver Operating Characteristic')
+    ax.plot([0, 1], [0, 1], 'k--')
+    plt.show()
 
 
 if __name__ == '__main__':

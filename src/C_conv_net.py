@@ -20,7 +20,7 @@ class ConvolutionalNetwork:
 
         # Define optimizer
         # self.optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
-        self.optimizer = SGD(lr=0.0001, momentum=0.9, nesterov=False)
+        self.optimizer = SGD(lr=0.0005, momentum=0.9, nesterov=False)
 
         # Define model including layers and activation functions
         self.model = Sequential([
@@ -28,11 +28,8 @@ class ConvolutionalNetwork:
             Dropout(0.5),
             MaxPooling1D(pool_size=2),
             Conv1D(128, 9, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
-            MaxPooling1D(pool_size=2),
             Conv1D(256, 9, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
-            MaxPooling1D(pool_size=2),
             Conv1D(512, 8, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
-            MaxPooling1D(pool_size=2),
             Conv1D(1024, 3, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
             MaxPooling1D(pool_size=1),
             Conv1D(144, 1, padding='same', activation='relu', kernel_regularizer=l2(0.01)),
@@ -63,7 +60,7 @@ class ConvolutionalNetwork:
         self.model.summary()
 
         # Train network to data with parameters: Batch Size, Epochs
-        history = self.model.fit(data, target, batch_size=256, epochs=70, shuffle=True, verbose=2, validation_data=[val_data, val_target], callbacks=[histories])
+        history = self.model.fit(data, target, batch_size=256, epochs=35, shuffle=True, verbose=2, validation_data=[val_data, val_target], callbacks=[histories])
 
         self.plot_loss(history)
         self.plot_acc(history)
@@ -98,27 +95,27 @@ class ConvolutionalNetwork:
             cur_prot = predictions[start:start+pro_length[i]]
 
             print('>', seq_id[i])
-            print('PREDICTED:', len(cur_prot))
+            print('#PREDICTED:', len(cur_prot))
             output_file.write('>' + str(seq_id[i]) + '\n')
-            output_file.write('PREDICTED:' + str(len(cur_prot)) + '\n')
+            output_file.write('#PREDICTED:' + str(len(cur_prot)) + '\n')
 
             top_n = self.max_n(cur_prot, chunk[i], len(cur_prot))
-            final_predictions, cut_out = self.filter_predictions(top_n, 0.8)
+            final_predictions, cut_out = self.filter_predictions(top_n, 0.6)
             pred_per_chunk += len(final_predictions)
 
-            # print('HITS: ', len(final_predictions))
-            output_file.write('HITS: ' + str(len(final_predictions)) + '\n')
+            print('#HITS:', len(final_predictions))
+            output_file.write('#HITS: ' + str(len(final_predictions)) + '\n')
 
-            # print('Start\t\t', 'Sequence\t\t\t\t', 'End\t\t', 'Probability')
-            output_file.write('Start\t\t' + 'Sequence\t\t\t\t' + 'End\t\t' + 'Probability\n')
+            print('#Start\t\t', 'Sequence\t\t\t\t', '  End', '  Prob')
+            output_file.write('#Start\t\t' + 'Sequence\t\t\t\t' + 'End\t\t' + 'Probability\n')
             for x in range(len(final_predictions)):
-                print(final_predictions[x][1], final_predictions[x][2], final_predictions[x][1]+33, final_predictions[x][0])
+                print(final_predictions[x][1], final_predictions[x][2], final_predictions[x][1]+33, round(final_predictions[x][0],4))
                 output_file.write(str(final_predictions[x][1]) + '\t' + str(final_predictions[x][2]) + '\t' + str(final_predictions[x][1] + 33) + '\t' + str(final_predictions[x][0]) + '\n')
 
-            # print('Filtered out due to overlapping with higher probabilities')
+            print('Filtered out due to overlapping with higher probabilities')
             output_file.write('Filtered out due to overlapping with higher probabilities\n')
             for c in range(len(cut_out)):
-                # print(cut_out[c][1], cut_out[c][2], cut_out[c][1] + 33, cut_out[c][0])
+                print(cut_out[c][1], cut_out[c][2], cut_out[c][1] + 33, cut_out[c][0])
                 output_file.write(str(cut_out[c][1]) + '\t' + str(cut_out[c][2]) + '\t' + str(cut_out[c][1] + 33) + '\t' + str(cut_out[c][0]) + '\n')
             # print('\n\n')
 
@@ -130,7 +127,7 @@ class ConvolutionalNetwork:
 
             start = start + pro_length[i]
 
-        return pred_per_chunk
+        return pred_per_chunk, predictions
 
     def save_model(self, directory):
         """
@@ -197,6 +194,7 @@ class ConvolutionalNetwork:
     def plot_loss(history):
 
         plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
         plt.title('model loss')
         plt.ylabel('loss')
         plt.xlabel('epoch')
@@ -207,6 +205,7 @@ class ConvolutionalNetwork:
     def plot_acc(history):
 
         plt.plot(history.history['acc'])
+        plt.plot(history.history['val_acc'])
         plt.title('model accuracy')
         plt.ylabel('accuracy')
         plt.xlabel('epoch')
@@ -234,12 +233,11 @@ class ConvolutionalNetwork:
                 if pos_probs[j] > max1:
                     max1 = pos_probs[j]
 
-            indices = [i for i, x in enumerate(pos_probs) if x == max1]
+            indices = [i for i, x in enumerate(index_getter) if x == max1]
 
             # This solves issue if there are two exact same probabilities
             # caused by same sequences
             if len(indices) > 1:
-
                 # To get every position not always the first one
                 for ind in indices:
                     if ind not in index_seen:
