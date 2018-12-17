@@ -15,19 +15,19 @@ class Evaluator:
         for file in os.listdir(self.result_dir):
             print(file)
 
-            if file.startswith('Pfam'):
+            if file.startswith('yeast'):
 
                 hitlist = []
 
                 with open(self.result_dir + file) as result:
 
                     for line in result:
-                        if line.startswith('HITS'):
+                        if line.startswith('#HITS'):
                             split = line.split(' ')
                             hits = split[-1].strip()
                             hitlist.append(hits)
 
-                tpr_prots = [hits for hits in hitlist if int(hits) > 1]
+                tpr_prots = [hits for hits in hitlist if int(hits) > 0]
                 print(len(tpr_prots))
 
     def count_tprpred_proteins(self):
@@ -71,6 +71,7 @@ class Evaluator:
 
                 # get PDB Id to find in matches file
                 hits = data['hits']
+                print(len(hits))
 
                 for hit in hits:
 
@@ -87,7 +88,7 @@ if __name__ == '__main__':
     evaluator = Evaluator()
 
     evaluator.count_tpr_proteins()
-    # tpr_found = evaluator.count_tprpred_proteins()
+    tpr_found = evaluator.count_tprpred_proteins()
     # hhpred_found = evaluator.compare()
     #
     # print('TPRpred FOUND: ', len(tpr_found))

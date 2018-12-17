@@ -100,7 +100,7 @@ class ConvolutionalNetwork:
             output_file.write('#PREDICTED:' + str(len(cur_prot)) + '\n')
 
             top_n = self.max_n(cur_prot, chunk[i], len(cur_prot))
-            final_predictions, cut_out = self.filter_predictions(top_n, 0.6)
+            final_predictions, cut_out = self.filter_predictions(top_n, 0.875)
             pred_per_chunk += len(final_predictions)
 
             print('#HITS:', len(final_predictions))
@@ -122,7 +122,7 @@ class ConvolutionalNetwork:
             output_file.write('REST\n')
             # To print all probabilities
             for idx, elem in enumerate(cur_prot):
-                # print(idx+1, chunk[i][idx], elem)
+                print(idx+1, chunk[i][idx], elem)
                 output_file.write(str(idx + 1) + '\t' + str(chunk[i][idx]) + '\t' + str(elem) + '\n')
 
             start = start + pro_length[i]

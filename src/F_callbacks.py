@@ -5,7 +5,7 @@ from sklearn.metrics import roc_curve, auc, precision_score, recall_score, f1_sc
 
 class Histories(keras.callbacks.Callback):
 
-    def __init__(self, out_path='/ebio/abt1_share/update_tprpred/code/src/network_data/', out_fn='best_model_big.h5'):
+    def __init__(self, out_path='/ebio/abt1_share/update_tprpred/code/src/network_data/', out_fn='best_model.h5'):
         self.f1 = 0
         self.path = out_path
         self.fn = out_fn
@@ -61,7 +61,7 @@ class Histories(keras.callbacks.Callback):
             self.f1 = f1
             self.model.save(self.path + self.fn, overwrite=True)
             # Write model to json
-            with open(self.path + 'best_model_big.json', 'w') as json_file:
+            with open(self.path + 'best_model.json', 'w') as json_file:
                 json_file.write(self.model.to_json())
 
         return
