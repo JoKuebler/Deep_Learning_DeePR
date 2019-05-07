@@ -1,2 +1,3 @@
-# predictor-master-thesis
-Neural Network to predict protein repeats 
+DeepPR
+
+A convolutional neural network for the prediction of Tetratricopeptide reapeats (TPR) in amino acid sequences.
