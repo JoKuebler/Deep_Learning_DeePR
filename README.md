@@ -1,4 +1,4 @@
-# DeepPR
+# DeePR
 
 A convolutional neural network (CNN) for the prediction of Tetratricopeptide reapeats (TPR) in amino acid sequences.
 
